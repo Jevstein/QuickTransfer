@@ -1,10 +1,10 @@
 #ifndef _PROTOCOL_H_
 #define _PROTOCOL_H_
 
-enum OPCODE
+enum PROTOCOLID
 {
-	pt_downloadfile_req = 1001,
-	pt_downloadfile_ack = 1002,
+	id_downloadfile_req = 1001,
+	id_downloadfile_ack = 1002,
 };
 
 
