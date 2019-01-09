@@ -9,13 +9,10 @@
 
 # 1.config
 ROOR_DIR = .
-SRC_DIRS = client server1
+SRC_DIRS = src/project_tcp/client src/project_tcp/server
 INSTALL_DIR = $(ROOR_DIR)/bin
 
-# 2.TOOL CHAIN OR PARAMETERS
-THREADS_FLAG = #-j2
-
-# 3.OUTPUT
+# 2.OUTPUT
 all: prog install
 	$(info all success!)
 
@@ -44,5 +41,5 @@ cleanall :
 	done;\
 	rm -rf $(INSTALL_DIR)/bin $(INSTALL_DIR)/lib;
 
-# 4.PHONY
+# 3.PHONY
 .PHONY : all prog install clean cleanall

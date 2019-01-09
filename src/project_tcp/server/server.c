@@ -10,8 +10,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/sendfile.h>
+// #include <sys/sendfile.h>
 #include <time.h>
+#include "PrefixHead.h"
+
+#ifdef YI_OS_MAC
+    #define basename(name) (name)
+#endif
  
 int main( int argc, char* argv[] )
 {
