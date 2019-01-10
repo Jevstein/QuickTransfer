@@ -9,7 +9,7 @@
 
 # 1.config
 ROOR_DIR = .
-SRC_DIRS = src/project_tcp/client src/project_tcp/server
+SRC_DIRS = src/client src/server
 INSTALL_DIR = $(ROOR_DIR)/bin
 
 # 2.OUTPUT

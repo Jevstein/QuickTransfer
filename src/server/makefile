@@ -9,10 +9,10 @@
 
 # 1.CONFIG
 DEBUG 		:= YES
-APP			:= client_tcp
-APP_OUT		:= client_tcp
-ROOT_DIR	:= ../../..
-PROJECT_DIR := ../..
+APP			:= server_tcp
+APP_OUT		:= server_tcp
+ROOT_DIR	:= ../..
+PROJECT_DIR := ..
 OUT_DIR		:= $(ROOT_DIR)/bin
 DEFS_DIR	:= 
 INCS_DIR	:= -I$(ROOT_DIR)/include \

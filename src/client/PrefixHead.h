@@ -24,7 +24,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
-#include "../../common/osversion.h"
+#include "../common/osversion.h"
 
 
 #define LOG_ERR(fmt,...) log__.error(fmt" ["__FILE__":%s().%d]", ##__VA_ARGS__, __YI_FUNC__, __LINE__)

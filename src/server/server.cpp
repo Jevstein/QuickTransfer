@@ -11,8 +11,8 @@
  *  @brief    : brief 
 *****************************************************************************/ 
 
-#include "PrefixHead.h"
-#include "Delegate.h"
+#include "prefixhead.h"
+#include "delegate.h"
 
 #include <signal.h>
 #include <stdlib.h>
@@ -20,36 +20,34 @@
 #include <execinfo.h>
 
 #define EXE_VERSION "1.0.1"
-#define EXE_NAME    "DirServerDemo"
+#define EXE_NAME    "Server"
 
-#define SIGUSR1 10
+// #define SIGUSR1 10
 
 //CLog log__("log/libyi", "_lby_");
 
 void exit_sigal(int)
 {
-	//SERVER->Stop();
 	return;
 }
 
 void reload_sigal(int)
 {
-	//CONFIG->ReInit();
 }
 
 void prepare_server(int argc, const char* argv)
 {
-	if (argc > 1 && strcmp("-D", argv) == 0)
-	{
-		puts("run as daemon!");
-		if (daemon(1, 0) < 0)
-		{
-			perror("error daemon...");
-			exit(1);
-		}
-	}
-	signal(SIGTERM, exit_sigal);
-	signal(SIGUSR1, reload_sigal);
+	// if (argc > 1 && strcmp("-D", argv) == 0)
+	// {
+	// 	puts("run as daemon!");
+	// 	if (daemon(1, 0) < 0)
+	// 	{
+	// 		perror("error daemon...");
+	// 		exit(1);
+	// 	}
+	// }
+	// signal(SIGTERM, exit_sigal);
+	// signal(SIGUSR1, reload_sigal);
 }
 
 bool show_info(int argc, const char *argv[])
@@ -89,7 +87,7 @@ void show_desc()
 {
     LOG_INF("/************************************************************************/");
     LOG_INF("/* @COPYRIGHT NOTICE                                                    */");
-    LOG_INF("/* @copyright (c) 2019, Microbeam software technology (Shanghai) co. LTD*/");
+    LOG_INF("/* @copyright (c) 2019, jevstein                                        */");
     LOG_INF("/* @All rights reserved.                                                */");
     LOG_INF("/*                                                                      */");
     LOG_INF("/* @name    : %s                                             */", EXE_NAME);
@@ -115,7 +113,7 @@ void handle_lastword_segv(int signum)
 	LOG_ERR("Launcher received SIG: %d Stack trace:\n", signum);
 	for (i = 0; i < size; i++)
 	{
-		LOG_ERR("%d %s \n", i, strings[i]);
+		LOG_ERR("%lu %s \n", i, strings[i]);
 	};
 
 	free(strings);
