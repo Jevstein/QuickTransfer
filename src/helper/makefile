@@ -9,21 +9,16 @@
 
 # 1.CONFIG
 DEBUG 		:= YES
-APP			:= server
-APP_OUT		:= server
+APP			:= libhelper
+APP_OUT		:= libhelper.a
 ROOT_DIR	:= ../..
 PROJ_DIR	:= ..
-OUT_DIR		:= $(ROOT_DIR)/bin
+OUT_DIR		:= $(ROOT_DIR)/lib
 DEFS_DIR	:= 
-INCS_DIR	:= -I$(ROOT_DIR)/include \
-			   -I$(PROJ_DIR)/helper	\
-			   -I$(PROJ_DIR)/common
-LIBS_DIR	:= $(ROOT_DIR)/lib
-LIBS		:= -ldl -lpthread \
-			   -L$(LIBS_DIR)/ -lhelper
-VPATH       := $(PROJ_DIR)/common
-RAW_SRCS	:= $(wildcard *.c) $(wildcard *.cpp) \
-			   $(wildcard $(PROJ_DIR)/common/*.cpp) $(wildcard $(PROJ_DIR)/common/*.c)
+INCS_DIR	:= -I$(ROOT_DIR)/include
+LIBS_DIR	:= 
+LIBS		:= 
+RAW_SRCS	:= $(wildcard *.c) $(wildcard *.cpp)
 
 # 2.TOOL CHAIN
 CXX				:= g++
@@ -32,8 +27,8 @@ CXX_FLAGS		:= $(COMMON_FLAGS)
 MKDIR_P     	:= mkdir -p
 CP          	:= cp
 RM				:= rm
+AR				:= ar rcs
 INSTALL			:= $(CP)
-EXPORET			:= $(CP)
 
 ifeq ($(DEBUG), YES)
     OBJ_DIR		:= Debug
@@ -67,20 +62,20 @@ cleaninstall:
 cleanall: clean cleaninstall
 	$(info $(APP)\makefile -> clean all success!)
 
-# 5.COMMON RULE
-$(OBJ_DIR)/%.o : %.cpp
+# 5.common rule
+$(OBJ_DIR)/%.o : %.c
 	$(info creating $@ ...)
 	@$(MKDIR_P) $(OBJ_DIR) ..
 	$(CXX) -c $(CXXFLAGS) $(INCS_DIR) $< -o $@
 
-$(OBJ_DIR)/%.o : %.c
+$(OBJ_DIR)/%.o : %.cpp
 	$(info creating $@ ...)
 	@$(MKDIR_P) $(OBJ_DIR) ..
 	$(CXX) -c $(CXXFLAGS) $(INCS_DIR) $< -o $@
 
 $(OBJ_DIR)/$(APP_OUT): $(OBJS)
 	$(info linking ...)
-	$(CXX) $(CXX_FLAGS) -o $(OBJ_DIR)/$(APP_OUT) $(OBJS) $(LIBS)
+	$(AR) $@ $(OBJS) $(LIBS)
 
 $(OUT_DIR)/$(APP_OUT): $(OBJ_DIR)/$(APP_OUT)
 	$(info installing ...)

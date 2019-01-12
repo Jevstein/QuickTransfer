@@ -19,6 +19,9 @@ private:
 	bool started_;
 
 	CConfig cfg_;
+
+    CModuleFactory net_fac_;
+    INetModule* net_module_;
 };
 
 #define DELEGATE__ CDelegate::GetInstancePtr()

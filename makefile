@@ -9,7 +9,7 @@
 
 # 1.config
 ROOR_DIR = .
-SRC_DIRS = src/client src/server
+SRC_DIRS = src/helper src/net src/client src/server
 INSTALL_DIR = $(ROOR_DIR)/bin
 
 # 2.OUTPUT

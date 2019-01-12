@@ -16,7 +16,7 @@
 struct cfg_info_t
 {
 	std::string ip;
-	short port;
+	unsigned short port;
 };
 
 class CConfig
@@ -28,6 +28,7 @@ public:
 	void cleanup();
 
 public:/*initialize*/
+	void init();
 
 public:/*set or get*/
 	const cfg_info_t* get_cfg_info() const { return &cfg_info_; }

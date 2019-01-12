@@ -1,9 +1,9 @@
 ﻿/***************************************************************************** 
  *  @COPYRIGHT NOTICE 
- *  @Copyright (c) 2017, Microbeam software technology (Shanghai) co. LTD 
+ *  @Copyright (c) 2017, Jevstein 
  *  @All rights reserved 
  
- *  @file     : main.cpp 
+ *  @file     : server.cpp 
  *  @version  : ver 1.0 
  
  *  @author   : yiwenqiang 
@@ -50,7 +50,7 @@ void prepare_server(int argc, const char* argv)
 	// signal(SIGUSR1, reload_sigal);
 }
 
-bool show_info(int argc, const char *argv[])
+bool usage(int argc, const char *argv[])
 {
     if (2 != argc)
         return false;
@@ -90,10 +90,10 @@ void show_desc()
     LOG_INF("/* @copyright (c) 2019, jevstein                                        */");
     LOG_INF("/* @All rights reserved.                                                */");
     LOG_INF("/*                                                                      */");
-    LOG_INF("/* @name    : %s                                             */", EXE_NAME);
+    LOG_INF("/* @name    : %s                                                    */", EXE_NAME);
     LOG_INF("/* @version : %s                                                     */", EXE_VERSION);
     LOG_INF("/*                                                                      */");
-    LOG_INF("/* @brief   : This is a demo to test the functionality of the DirServer */");
+    LOG_INF("/* @brief   : This is a server to send any file that the client requests*/");
     LOG_INF("/************************************************************************/");
 }
 
@@ -109,7 +109,6 @@ void handle_lastword_segv(int signum)
 	size = backtrace(array, 100);
 	strings = (char **)backtrace_symbols(array, size);
 
-	// 这里是打印到日志中，其实也可以打印到某个文件中
 	LOG_ERR("Launcher received SIG: %d Stack trace:\n", signum);
 	for (i = 0; i < size; i++)
 	{
@@ -117,7 +116,6 @@ void handle_lastword_segv(int signum)
 	};
 
 	free(strings);
-	//g_launcher->stop();
 }
 
 void register_lastword()
@@ -135,7 +133,7 @@ int main(int argc, const char * argv[])
 	setlocale(LC_ALL, "C");
     
     // show version information
-    if (show_info(argc, argv))
+    if (usage(argc, argv))
         return 0;
 
 	srand((unsigned)time(NULL));
@@ -145,13 +143,9 @@ int main(int argc, const char * argv[])
     // show the description information for this application
 	show_desc();
     
-	// initialize
-	LOG_INF("initialize ...");
+	// delegate
 	if (!DELEGATE__->init())
 		return 0;
-
-	// run
-	LOG_INF("running ...");
 	DELEGATE__->run();
     
     // destroy

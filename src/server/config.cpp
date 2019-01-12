@@ -14,3 +14,8 @@ void CConfig::cleanup()
 {
 }
 
+void CConfig::init()
+{
+    cfg_info_.ip = "0.0.0.0";
+	cfg_info_.port = 6666;
+}
