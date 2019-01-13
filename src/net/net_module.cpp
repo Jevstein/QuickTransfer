@@ -1,7 +1,14 @@
 #include "prefixhead.h"
 #include "net_module.h"
+#include "tcp_listener.h"
+#include "tcp_connector.h"
 
 CNetModule* net_module__ = NULL;
+
+CNetModule* get_module()
+{
+    return net_module__;
+}
 
 extern "C" /*P_EXPORT_DLL*/ INetModule* create_net_module()
 {
@@ -20,7 +27,7 @@ CNetModule::CNetModule()
 
 CNetModule::~CNetModule()
 {
-
+    reactor_.misfire();
 }
 
 void CNetModule::release()
@@ -31,25 +38,31 @@ void CNetModule::release()
 
 int CNetModule::run(int limit /*= 1*/)
 {
-    LOG_INF("run...");
+	IEvent* ev = main_event_queue_.pop();
+	if (ev == NULL)
+	{
+		return 1;
+	}
+
+	ev->process();
+	ev->release();
+
     return 0;
 }
 
 IListener* CNetModule::create_listener()
 {
-    LOG_INF("create_listener...");
-    return 0;
+    return new CTCPListener();
 }
 
 IConnector* CNetModule::create_connector()
 {
-
-    LOG_INF("create_connector...");
-    return 0;
+    return new CTCPConnector();
 }
 
 void CNetModule::init()
 {
-
     LOG_INF("CNetModule::init()...");
+
+	reactor_.fire();
 }

@@ -16,12 +16,14 @@ public:
 	CTCPConnector();
     virtual ~CTCPConnector();
     virtual void release();
-    virtual bool connect(const char* remote_addr, int port);
-    virtual void set_session(ISession* session);
-    virtual void set_parser(IPacketParser* parser);
+    virtual bool connect(const char* addr, int port);
+    virtual void set_session(ISession* session) { session_ = session; }
+    virtual void set_parser(IPacketParser* parser) { parser_ = parser; }
 
 private:
 	CConnection* connection_;
+    IPacketParser* parser_;
+    ISession* session_;
 };
 
 #endif//_TCP_CONNECTOR_H_

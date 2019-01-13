@@ -22,8 +22,8 @@ LIBS_DIR	:= $(ROOT_DIR)/lib
 LIBS		:= -ldl -lpthread \
 			   -L$(LIBS_DIR)/ -lhelper
 VPATH       := $(PROJ_DIR)/common
-RAW_SRCS	:= $(wildcard *.c) $(wildcard *.cpp) \
-			   $(wildcard $(PROJ_DIR)/common/*.cpp) $(wildcard $(PROJ_DIR)/common/*.c)
+RAW_SRCS	:= $(wildcard *.c) $(wildcard *.cpp)
+			   #$(wildcard $(PROJ_DIR)/common/*.cpp) $(wildcard $(PROJ_DIR)/common/*.c)
 
 # 2.TOOL CHAIN
 CXX				:= g++

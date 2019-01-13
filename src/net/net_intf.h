@@ -17,7 +17,7 @@ public:
     virtual void close_connection() = 0;
     virtual void reconnect() = 0;
     virtual bool is_connected() = 0;
-    virtual void get_addr(struct sockaddr* remoteaddr) = 0;
+    virtual void get_addr(struct sockaddr* remote_addr) = 0;
     virtual void set_session(ISession* session) = 0;
 };
 
@@ -25,18 +25,18 @@ class ISession
 {
 public:
     virtual ~ISession(){}
+    virtual void release() = 0;
     virtual void on_connection(IConnection* connection) = 0;
     virtual void on_disconnect() = 0;
     virtual void on_disconnection() = 0;
     virtual void on_recv(const char* data, int size) = 0;
-    virtual void release() = 0;
 };
 
 class ISessionCreator
 {
 public:
     virtual ~ISessionCreator(){}
-    virtual bool on_preaccept(struct sockaddr* remoteaddr) = 0;
+    virtual bool on_preaccept(struct sockaddr* remote_addr) = 0;
     virtual ISession* on_create() = 0;
     virtual void destroy(ISession* session) = 0;
 };
@@ -44,9 +44,9 @@ public:
 class IPacketParser
 {
 public:
+    virtual ~IPacketParser(){}
     virtual int encode(const char* data, int size, char* out_data, int& out_size) = 0;
     virtual int decode(const char* data, int size, char* out_data, int& out_size) = 0;
-    virtual ~IPacketParser(){}
 };
 
 class IListener
@@ -54,7 +54,7 @@ class IListener
 public:
     virtual ~IListener(){}
     virtual void release() = 0;
-    virtual bool start_listen(const char* listen_addr, int port) = 0;
+    virtual bool start_listen(const char* addr, int port) = 0;
     virtual void stop_listen() = 0;
     virtual void set_parser(IPacketParser* parser) = 0;
     virtual void set_creator(ISessionCreator* creator) = 0;
@@ -65,7 +65,7 @@ class IConnector
 public:
     virtual ~IConnector(){}
     virtual void release() = 0;
-    virtual bool connect(const char* remote_addr, int port) = 0;
+    virtual bool connect(const char* addr, int port) = 0;
     virtual void set_session(ISession* session) = 0;
     virtual void set_parser(IPacketParser* parser) = 0;
 };

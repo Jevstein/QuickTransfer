@@ -34,16 +34,17 @@ using namespace std;
 
 #include <signal.h>
 #include <errno.h>
-// #include <netinet/in.h>
-// //#include <sys/timeb.h>
-// #include <sys/types.h>
-// #include <sys/socket.h>
-// #include <netinet/in.h>
-// #include <netinet/tcp.h>
-// #include <arpa/inet.h>
+#include <netinet/in.h>
+//#include <sys/timeb.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
 
+#include "../helper/globaldefine.h"
 #include "../helper/osversion.h"
-#include "../helper/log.h"
+// #include "../helper/log.h"
 // #include "../helper/socket_api.h"
 // #include "../helper/epoll_api.h"
 #include "../helper/modulefactory.h"
@@ -79,12 +80,12 @@ static inline type* GetInstancePtr() \
 											return 0; \
 										}
 
-// // log
-// #define LOG_ERR(fmt,...) printf("[error] "fmt" ["__FILE__":%s().%d]\n", ##__VA_ARGS__, __FUNCTION__, __LINE__)
-// #define LOG_EXP(fmt,...) printf("[exception] "fmt" ["__FILE__":%s().%d]\n", ##__VA_ARGS__, __FUNCTION__, __LINE__)
-// #define LOG_WAR(fmt,...) printf("[warning] "fmt"\n", ##__VA_ARGS__)
-// #define LOG_INF(fmt,...) printf("[inf] "fmt"\n", ##__VA_ARGS__)
-// #define LOG_DBG(fmt,...) printf("[dbg] "fmt"\n", ##__VA_ARGS__)
+// log
+#define LOG_ERR(fmt,...) { time_t now = time(NULL); printf("[%.24s][error][srv] "fmt" ["__FILE__":%s().%d]\n", ctime(&now), ##__VA_ARGS__, __FUNCTION__, __LINE__); }
+#define LOG_EXP(fmt,...) { time_t now = time(NULL); printf("[%.24s][exception][srv] "fmt" ["__FILE__":%s().%d]\n", ctime(&now), ##__VA_ARGS__, __FUNCTION__, __LINE__); }
+#define LOG_WAR(fmt,...) { time_t now = time(NULL); printf("[%.24s][warning][srv] "fmt"\n", ctime(&now), ##__VA_ARGS__); }
+#define LOG_INF(fmt,...) { time_t now = time(NULL); printf("[%.24s][inf][srv] "fmt"\n", ctime(&now), ##__VA_ARGS__); }
+#define LOG_DBG(fmt,...) { time_t now = time(NULL); printf("[%.24s][dbg][srv] "fmt"\n", ctime(&now), ##__VA_ARGS__); }
 
 // ip and port
 #define SERVER_IP "127.0.0.1"

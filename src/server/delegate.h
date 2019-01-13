@@ -1,6 +1,7 @@
 #ifndef _DELEGATE_H_
 #define _DELEGATE_H_
 #include "config.h"
+#include "sessioncreator.h"
 
 class CDelegate
 {
@@ -15,13 +16,14 @@ public:
 	void stop();
 
 private:
-
 	bool started_;
 
 	CConfig cfg_;
 
     CModuleFactory net_fac_;
     INetModule* net_module_;
+	IListener* tcp_listener_;
+	CSessionCreator session_creator_;
 };
 
 #define DELEGATE__ CDelegate::GetInstancePtr()

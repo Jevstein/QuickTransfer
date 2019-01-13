@@ -1,23 +1,24 @@
 ﻿#include "prefixhead.h"
 #include "tcp_listener.h"
+#include "connection.h"
 // #include "NetTCPConnection.h"
 // #include "NetPacketParser.h"
 // #include "NetWorker.h"
 // #include "IOModel.h"
 // #include "IOModelEpoll.h"
 // #include "IOModelKqueue.h"
-// #include "NetModule.h"
+#include "net_module.h"
 
 CTCPListener::CTCPListener(void)
 : packet_parser_(NULL)
 , session_creator_(NULL)
 {
-	//LOG_DBG("CTCPListener(void)");
+
 }
 
 CTCPListener::~CTCPListener(void)
 {
-	//LOG_DBG("~CTCPListener(void)");
+	
 }
 
 void CTCPListener::release()
@@ -26,71 +27,71 @@ void CTCPListener::release()
 	delete this;
 }
 
-void CTCPListener::set_parser(IPacketParser* parser)
-{
-	packet_parser_ = parser;
-}
-
-void CTCPListener::set_creator(ISessionCreator* creator)
-{
-	session_creator_ = creator;
-}
-
 bool CTCPListener::start_listen(const char* listen_addr, int port)
 {
-	// //1.create socket
-	// fd_ = _create_socket(listen_addr, port, SOCK_STREAM);
-	// if (fd_ < 0)
-    // {
-    //     LOG_ERR("failed to create socket! err: %s", p_socket_last_error());
-    //     return false;
-    // }
+	// 1.create socket
+	sock_fd_ = socket_create(listen_addr, port, SOCK_STREAM, &addrinfo_res_);
+	if (sock_fd_ < 0)
+	{
+        LOG_ERR("failed to create socket! err: %s", p_socket_last_error());
+        return false;
+	}
 
-    // //3.modify socket
-	// CConnection::set_reuse_port(fd_);
-    
-    // //4. bind
-	// if (0 != ::bind(fd_, addrinfo_res_->ai_addr, addrinfo_res_->ai_addrlen))
-	// {
-	// 	LOG_ERR("failed to bind! err: %s", p_socket_last_error());
-	// 	return false;
-	// }
+	// *.set reuse
+	if (!set_reuse_port(sock_fd_))
+	{
+		LOG_ERR("failed to reuse port!");
+		addrinfo_res_ = addrinfo_res_->ai_next;
+		return false;
+	}
 
-	// LOG_DBG("start listen to [%s|%d]", listen_addr, port);
+	// 2.bind
+	if (!socket_bind(sock_fd_, addrinfo_res_))
+	{
+		LOG_ERR("failed to bind! err: %s", p_socket_last_error());
+		addrinfo_res_ = addrinfo_res_->ai_next;
+		return false;
+	}
 
-    // //5. listen
-	// if (0 != ::listen(fd_, 128))
-    // {
-	// 	LOG_ERR("failed to listen[%s|%d]! err: %s", listen_addr, port, p_socket_last_error());
-	// 	return false;
-	// }
+	// 3.listen
+	if (!socket_listen(sock_fd_, 128))
+	{
+		LOG_ERR("failed to listen[%s.%d]! err: %s", listen_addr, port, p_socket_last_error());
+		addrinfo_res_ = addrinfo_res_->ai_next;
+		return false;
+	}
 
-	// CNetWorker::GetInstancePtr()->AddSocket(fd_, EPOLLIN, (void*)this);
+	get_module()->get_reactor()->add_socket(sock_fd_, EPOLLIN, (void *)this);
     
 	return true;
 }
 
 void CTCPListener::stop_listen()
 {
-	// if (fd_ != -1)
-	// {
-	// 	CNetWorker::GetInstancePtr()->DelSocket(fd_);
-	// 	CLOSE_SOCKET(fd_);
-	// 	fd_ = -1;
-	// }
+	if (sock_fd_ != -1)
+	{
+		get_module()->get_reactor()->del_socket(sock_fd_);
+		socket_close(sock_fd_);
+		sock_fd_ = -1;
+	}
 }
 
 void CTCPListener::on_accept()
 {
-	// struct sockaddr_in6 client_addr;
-	// memset(&client_addr, 0, sizeof(client_addr));
-	// socklen_t addrlen = sizeof(client_addr);
-	// int fd_conn = ::accept(fd_, (sockaddr*)&client_addr, &addrlen);
-	// if (fd_conn == -1)
-	// {
-	// 	LOG_ERR("failed to accept, err: %s", p_socket_last_error());
-	// 	return;
-	// }
+	struct sockaddr_in6 client_addr;
+	YI_SOCKET conn_fd = socket_accept(sock_fd_, &client_addr);
+	if (conn_fd < 0)
+	{
+		LOG_ERR("failed to accept, err: %s", p_socket_last_error());
+		return;
+	}
+
+	if (!set_nonblocking(conn_fd))
+	{
+		LOG_ERR("failed to nonblocking!");
+		socket_close(conn_fd);
+		return;
+	}
 
 	// {//print
 	// 	//char ip_addr[INET6_ADDRSTRLEN] = {0};
@@ -103,32 +104,31 @@ void CTCPListener::on_accept()
 	// 		, fd_conn);
 	// }
 
-	// if (!session_creator_->OnPreAccept((struct sockaddr*)&client_addr))
-	// {
-	// 	CLOSE_SOCKET(fd_conn);
-	// 	LOG_ERR("failed to accept preparatively!");
-	// 	return;
-	// }
+	if (!session_creator_->on_preaccept((struct sockaddr*)&client_addr))
+	{
+		LOG_ERR("failed to accept preparatively!");
+		socket_close(conn_fd);
+		return;
+	}
 
-	// CNetTCPConnection* connection = NET_POOL->PopNetTCPConnection();
-	// if (!connection)
-	// {
-	// 	CLOSE_SOCKET(fd_conn);
-	// 	LOG_ERR("failed to get tcp connection!");
-	// 	return;
-	// }
+	CConnection* connection = get_module()->get_pool()->pop_connection();
+	if (!connection)
+	{
+		LOG_ERR("failed to get tcp connection!");
+		socket_close(conn_fd);
+		return;
+	}
 
-	// IYiSession* session = session_creator_->OnCreateSession();
-	// if (!session)
-	// {
-	// 	CLOSE_SOCKET(fd_conn);
-	// 	LOG_ERR("failed to create session!");
-	// 	return;
-	// }
+	ISession* session = session_creator_->on_create();
+	if (!session)
+	{
+		LOG_ERR("failed to create session!");
+		socket_close(conn_fd);
+		return;
+	}
 
-	// CConnection::set_nonblocking(fd_conn);
-	// connection->SetSession(session);
-	// connection->SetSockPacketParser(packet_parser_);
-	// connection->_OnConnection(fd_conn);
+	connection->set_session(session);
+	connection->set_parser(packet_parser_);
+	connection->_on_connection(conn_fd);
 }
 

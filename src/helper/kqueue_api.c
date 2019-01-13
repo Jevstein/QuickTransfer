@@ -105,7 +105,7 @@ int io_wait(YI_EPFD epfd, net_io_event** events, int maxevents/* = 2000*/)
 void io_close(YI_EPFD epfd, net_io_event* events)
 {
 	close(epfd);
-	// delete[] events;s
+	// delete[] events;
 	free(events);
 
 	LOG_INF("close kqueue success!");

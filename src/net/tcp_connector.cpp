@@ -1,23 +1,24 @@
 ﻿#include "prefixhead.h"
 #include "tcp_connector.h"
-#include "connection.h"
+// #include "connection.h"
+#include "net_module.h"
 
 CTCPConnector::CTCPConnector()
 : connection_(NULL)
 {
 	//LOG_DBG(" CTCPConnector");
-
-    // connection_ = NET_POOL->PopNetTCPConnection();
 }
 
- CTCPConnector::~ CTCPConnector(void)
+CTCPConnector::~ CTCPConnector(void)
 {
-	//LOG_DBG("~ CTCPConnector");
-
-	connection_->set_parser(NULL);
-	connection_->set_session(NULL);
-	// connection_->on_closeconnection();
-	// NET_POOL->PushNetTCPConnection((CNetTCPConnection *)connection_);
+	if (connection_)
+	{
+		connection_->set_parser(NULL);
+		connection_->set_session(NULL);
+		// connection_->on_closeconnection();
+		get_module()->get_pool()->push_connection(connection_);
+		connection_ = NULL;
+	}
 }
 
 void CTCPConnector::release()
@@ -25,24 +26,20 @@ void CTCPConnector::release()
 	delete this;
 }
 
-bool CTCPConnector::connect(const char* remote_addr, int port)
+bool CTCPConnector::connect(const char* addr, int port)
 {
 	if (!connection_)
 	{
-		LOG_ERR("the connection_ is null!");
-		return false;
+		connection_ = get_module()->get_pool()->pop_connection();
+		if (!connection_)
+		{
+			LOG_ERR("the connection_ is null!");
+			return false;
+		}
+
+		connection_->set_session(session_);
+		connection_->set_parser(parser_);
 	}
 
-	// return connection_->connect(remote_addr, port);
-	return true;
-}
-
-void CTCPConnector::set_session(ISession* session)
-{
-	connection_->set_session(session);
-}
-
-void CTCPConnector::set_parser(IPacketParser* parser)
-{
-	connection_->set_parser(parser);
+	return connection_->connect(addr, port);
 }
