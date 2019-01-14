@@ -105,7 +105,7 @@ void CReactor::do_event_queue()
         LOG_DBG("CReactor::ev->process()");
         ev->process();
         
-        get_module()->main_event_queue()->push(ev);
+        // get_module()->main_event_queue()->push(ev);
         ev = (CTCPEvent *)que_of_event_.pop();
     }
     
@@ -120,7 +120,7 @@ void CReactor::do_event_queue()
         LOG_DBG("CReactor::delay::ev->process()");
         ev->process();
         
-        get_module()->main_event_queue()->push(ev);
+        // get_module()->main_event_queue()->push(ev);
         que_of_delay_event_.pop();
         ev = (CTCPEvent*)que_of_delay_event_.front();
     }

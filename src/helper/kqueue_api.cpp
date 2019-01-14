@@ -21,8 +21,8 @@ YI_EPFD io_create(net_io_event** events, int nfds /*= 4096*/)
 		return -1;
 	}
 	
-	// events = new struct kevent[fds];
-	*events = (struct kevent *)malloc(sizeof(struct kevent) * nfds);
+	events = new struct kevent[nfds];
+	// *events = (struct kevent *)malloc(sizeof(struct kevent) * nfds);
 	if (NULL == *events)
 	{
 		LOG_ERR("failed to new epoll_event!");
@@ -105,8 +105,8 @@ int io_wait(YI_EPFD epfd, net_io_event** events, int maxevents/* = 2000*/)
 void io_close(YI_EPFD epfd, net_io_event* events)
 {
 	close(epfd);
-	// delete[] events;
-	free(events);
+	delete[] events;
+	// free(events);
 
 	LOG_INF("close kqueue success!");
 }

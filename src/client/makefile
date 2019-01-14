@@ -9,26 +9,31 @@
 
 # 1.CONFIG
 DEBUG 		:= YES
-APP			:= client_tcp
-APP_OUT		:= client_tcp
+APP			:= client
+APP_OUT		:= client
 ROOT_DIR	:= ../..
-PROJECT_DIR := ..
+PROJ_DIR	:= ..
 OUT_DIR		:= $(ROOT_DIR)/bin
 DEFS_DIR	:= 
 INCS_DIR	:= -I$(ROOT_DIR)/include \
-			   -I$(PROJECT_DIR)/common
-LIBS_DIR	:= 
-LIBS		:= -ldl -lpthread
-SRCS		:= $(wildcard *.cpp) $(wildcard *.c)
+			   -I$(PROJ_DIR)/helper	\
+			   -I$(PROJ_DIR)/common
+LIBS_DIR	:= $(ROOT_DIR)/lib
+LIBS		:= -ldl -lpthread \
+			   -L$(LIBS_DIR)/ -lhelper
+VPATH       := $(PROJ_DIR)/common
+RAW_SRCS	:= $(wildcard *.c) $(wildcard *.cpp)
+			   #$(wildcard $(PROJ_DIR)/common/*.cpp) $(wildcard $(PROJ_DIR)/common/*.c)
 
 # 2.TOOL CHAIN
 CXX				:= g++
-COMMON_FLAGS	:= -g
+COMMON_FLAGS	:= -g -std=c++11
 CXX_FLAGS		:= $(COMMON_FLAGS)
 MKDIR_P     	:= mkdir -p
 CP          	:= cp
 RM				:= rm
 INSTALL			:= $(CP)
+EXPORET			:= $(CP)
 
 ifeq ($(DEBUG), YES)
     OBJ_DIR		:= Debug
@@ -37,6 +42,7 @@ else
 endif
 
 # 3.FILES
+SRCS    := $(notdir $(RAW_SRCS))
 OBJS	:= $(addsuffix .o, $(basename $(SRCS)))
 OBJS	:= $(patsubst %.o, $(OBJ_DIR)/%.o, $(OBJS))
 
@@ -52,9 +58,11 @@ install: $(OUT_DIR)/$(APP_OUT)
 
 clean:
 	$(RM) -rf $(OBJ_DIR)
+	$(info $(APP)\makefile -> clean success!)
 
 cleaninstall:
 	$(RM) $(OUT_DIR)/$(APP_OUT)
+	$(info $(APP)\makefile -> clean install success!)
 
 cleanall: clean cleaninstall
 	$(info $(APP)\makefile -> clean all success!)

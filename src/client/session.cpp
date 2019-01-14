@@ -12,7 +12,6 @@ CSession::~CSession()
 
 void CSession::release()
 {
-    LOG_INF("CSession::release");
 }
 
 void CSession::on_connection(IConnection* connection)
