@@ -17,10 +17,10 @@ class INetSocket
 public:
     INetSocket();
     virtual ~INetSocket();
-    virtual void on_accept() = 0;
-    virtual void on_recv() = 0;
-    virtual void on_send() = 0;
-    virtual void on_error() = 0;
+    virtual void on_accept(){}
+    virtual void on_recv(){}
+    virtual void on_send(){}
+    virtual void on_error(){}
 
 public:
     int get_socket_type() const { return socket_type_; }

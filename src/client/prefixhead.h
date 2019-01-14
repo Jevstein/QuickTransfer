@@ -20,6 +20,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <functional>
+#include <dlfcn.h>
 
 #include <string.h>
 #include <string>

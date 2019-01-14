@@ -20,6 +20,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <functional>
+#include <dlfcn.h>
 
 #include <string.h>
 #include <string>
@@ -44,6 +45,7 @@ using namespace std;
 
 #include "../helper/globaldefine.h"
 #include "../helper/osversion.h"
+#include "../helper/platform.h"
 // #include "../helper/log.h"
 // #include "../helper/socket_api.h"
 // #include "../helper/epoll_api.h"

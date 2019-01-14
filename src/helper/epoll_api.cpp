@@ -37,7 +37,7 @@ YI_EPFD io_create(net_io_event** events, int nfds /*= 4096*/)
 		return -2;
 	}
 
-	LOG_INFO("create epoll success! nfds: %d", nfds);
+	LOG_INF("create epoll success! nfds: %d", nfds);
 
 	return epfd;
 }
@@ -51,7 +51,7 @@ bool io_add_fd(YI_EPFD epfd, YI_SOCKET sockfd, int events, void* key)
 		return false;
 	}
 
-	LOG_INFO("set EPOLL_CTL_ADD success! sockfd=%d, events=%d", sockfd, events);
+	LOG_INF("set EPOLL_CTL_ADD success! sockfd=%d, events=%d", sockfd, events);
 
 	return true;
 }
@@ -65,7 +65,7 @@ bool io_modify_fd(YI_EPFD epfd, YI_SOCKET sockfd, int events, void* key)
 		return false;
 	}
 
-	LOG_INFO("set EPOLL_CTL_MOD success! sockfd=%d, events=%d", sockfd, events);
+	LOG_INF("set EPOLL_CTL_MOD success! sockfd=%d, events=%d", sockfd, events);
 
 	return true;
 }
@@ -79,7 +79,7 @@ bool io_del_fd(YI_EPFD epfd, YI_SOCKET sockfd, int events /*= 0*/)
 		return false;
 	}
 
-	LOG_INFO("set EPOLL_CTL_DEL success! sockfd=%d, events=%d", sockfd, events);
+	LOG_INF("set EPOLL_CTL_DEL success! sockfd=%d, events=%d", sockfd, events);
 
 	return true;
 }
@@ -94,7 +94,7 @@ void io_close(YI_EPFD epfd, net_io_event* events)
 	::close(epfd);
 	delete[] events;
 
-	LOG_INFO("close epoll success!");
+	LOG_INF("close epoll success!");
 }
 
 int io_get_event(net_io_event** events, int idx)

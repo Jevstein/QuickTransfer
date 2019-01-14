@@ -12,6 +12,7 @@
 *****************************************************************************/ 
 #ifndef _SESSION_H_
 #define _SESSION_H_
+#include "../net/net_intf.h"
 
 class CSession : public ISession
 {
