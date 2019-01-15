@@ -1,5 +1,5 @@
-#ifndef BRKS_INTF_INTERFACE_H_
-#define BRKS_INTF_INTERFACE_H_
+#ifndef _RECTOR_H_
+#define _RECTOR_H_
 
 // #include "protocol_head.h"
 // #include "protocol_codec.h"
@@ -8,7 +8,7 @@
 // #include "../common/event.h"
 // #include "../common/protocol_codec.h"
 
-#include "iomodel.h"
+#include "io_model.h"
 
 class CReactor : public CThread
 {
@@ -32,9 +32,9 @@ protected:
     void do_event_queue();
 
 private:
-    CIOModel io_model_;
+    CIOModel* io_model_;
 	CEventQueue<IEvent *> que_of_event_;
 	CEventQueue<IEvent *> que_of_delay_event_;
 };
 
-#endif
+#endif//_RECTOR_H_

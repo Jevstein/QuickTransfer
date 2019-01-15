@@ -4,6 +4,7 @@
 #include "net_event.h"
 
 CReactor::CReactor()
+: io_model_(NULL)
 {
 
 }
@@ -15,7 +16,14 @@ CReactor::~CReactor()
 
 bool CReactor::fire()
 {
-    if(-1 == io_model_.init())
+	io_model_ = CIOModel::create_model(0);
+	if (!io_model_)
+    {
+        LOG_ERR("failed to create model!");
+        return false;
+    }
+
+    if(-1 == io_model_->init())
     {
         LOG_ERR("failed to init io model!");
         return false;
@@ -27,8 +35,9 @@ bool CReactor::fire()
 }
 
 void CReactor::misfire()
-{ 
-	io_model_.close();
+{
+	CIOModel::destry_model(io_model_);
+	io_model_ = NULL;
 	is_started_ = false;
 	CThread::stop();
 }
@@ -40,7 +49,7 @@ void CReactor::run()
 	int idxs = -1;
 	while(is_started_)
     {
-		idxs = io_model_.wait();
+		idxs = io_model_->wait();
 		if(idxs < 0)
 		{
 			if(errno == EINTR)
@@ -54,7 +63,7 @@ void CReactor::run()
 
 		for(int i = 0; i < idxs; ++i)
 		{
-			INetSocket* net_socket = (INetSocket *)io_model_.get_userdata(i);
+			INetSocket* net_socket = (INetSocket *)io_model_->get_key(i);
 			if(net_socket == NULL)
             {
                 LOG_DBG("invalid net_socket!");
@@ -69,7 +78,7 @@ void CReactor::run()
 			}
 			else
 			{//socket
-				int events = io_model_.get_event(i);
+				int events = io_model_->get_event(i);
 				if (events & EPOLLERR || events & EPOLLHUP)
                 {
                     LOG_ERR("socket events error, events=%d, err: %s", events, p_socket_last_error());
@@ -128,15 +137,15 @@ void CReactor::do_event_queue()
 
 bool CReactor::add_socket(YI_SOCKET sockfd, int events, void* key)
 {
-    return io_model_.addfd(sockfd, events, key);
+    return io_model_->add_fd(sockfd, events, key);
 }
 
 bool CReactor::del_socket(YI_SOCKET sockfd)
 {
-    return io_model_.deletefd(sockfd);
+    return io_model_->del_fd(sockfd);
 }
 
 bool CReactor::modify_socket(YI_SOCKET sockfd, int events, void* key)
 {
-    return io_model_.modifyfd(sockfd, events, key); 
+    return io_model_->modify_fd(sockfd, events, key); 
 }
