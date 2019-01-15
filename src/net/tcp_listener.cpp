@@ -30,15 +30,14 @@ void CTCPListener::release()
 bool CTCPListener::start_listen(const char* listen_addr, int port)
 {
 	// 1.create socket
-	sock_fd_ = socket_create(listen_addr, port, SOCK_STREAM, &addrinfo_res_);
-	if (sock_fd_ < 0)
+	if (INetSocket::socket_create(listen_addr, port, SOCK_STREAM) < 0)
 	{
         LOG_ERR("failed to create socket! err: %s", p_socket_last_error());
         return false;
 	}
 
 	// *.set reuse
-	if (!set_reuse_port(sock_fd_))
+	if (!INetSocket::set_reuse_port())
 	{
 		LOG_ERR("failed to reuse port!");
 		addrinfo_res_ = addrinfo_res_->ai_next;
@@ -46,7 +45,7 @@ bool CTCPListener::start_listen(const char* listen_addr, int port)
 	}
 
 	// 2.bind
-	if (!socket_bind(sock_fd_, addrinfo_res_))
+	if (!INetSocket::socket_bind())
 	{
 		LOG_ERR("failed to bind! err: %s", p_socket_last_error());
 		addrinfo_res_ = addrinfo_res_->ai_next;
@@ -54,7 +53,7 @@ bool CTCPListener::start_listen(const char* listen_addr, int port)
 	}
 
 	// 3.listen
-	if (!socket_listen(sock_fd_, 128))
+	if (!INetSocket::socket_listen(128))
 	{
 		LOG_ERR("failed to listen[%s.%d]! err: %s", listen_addr, port, p_socket_last_error());
 		addrinfo_res_ = addrinfo_res_->ai_next;
@@ -71,25 +70,24 @@ void CTCPListener::stop_listen()
 	if (sock_fd_ != -1)
 	{
 		get_module()->get_reactor()->del_socket(sock_fd_);
-		socket_close(sock_fd_);
-		sock_fd_ = -1;
+		INetSocket::socket_close();
 	}
 }
 
 void CTCPListener::on_accept()
 {
 	struct sockaddr_in6 client_addr;
-	YI_SOCKET conn_fd = socket_accept(sock_fd_, &client_addr);
+	int conn_fd = INetSocket::socket_accept(&client_addr);
 	if (conn_fd < 0)
 	{
 		LOG_ERR("failed to accept, err: %s", p_socket_last_error());
 		return;
 	}
 
-	if (!set_nonblocking(conn_fd))
+	if (!INetSocket::set_nonblocking(conn_fd))
 	{
 		LOG_ERR("failed to nonblocking!");
-		socket_close(conn_fd);
+		CLOSE_SOCKET(conn_fd);
 		return;
 	}
 
@@ -107,7 +105,7 @@ void CTCPListener::on_accept()
 	if (!session_creator_->on_preaccept((struct sockaddr*)&client_addr))
 	{
 		LOG_ERR("failed to accept preparatively!");
-		socket_close(conn_fd);
+		CLOSE_SOCKET(conn_fd);
 		return;
 	}
 
@@ -115,7 +113,7 @@ void CTCPListener::on_accept()
 	if (!connection)
 	{
 		LOG_ERR("failed to get tcp connection!");
-		socket_close(conn_fd);
+		CLOSE_SOCKET(conn_fd);
 		return;
 	}
 
@@ -123,7 +121,8 @@ void CTCPListener::on_accept()
 	if (!session)
 	{
 		LOG_ERR("failed to create session!");
-		socket_close(conn_fd);
+		CLOSE_SOCKET(conn_fd);
+		get_module()->get_pool()->push_connection(connection);
 		return;
 	}
 

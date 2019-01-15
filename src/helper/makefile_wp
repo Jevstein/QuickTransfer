@@ -1,0 +1,79 @@
+#**********************************************************
+#
+# by wp
+# 2006/04/04
+#
+#**********************************************************
+
+#**********************************************************
+#
+#	user design
+#**********************************************************
+
+# DEBUG can be set to YES to include debug info, or NO otherwise
+DEBUG       := YES
+DEFS	    := 
+ROOT_DIR    := ../..
+PROJECT_DIR := 
+ifeq (YES, $(DEBUG))
+     OUTPUT	:= $(ROOT_DIR)/lib/libhelper.a
+else 
+     OUTPUT	:= $(ROOT_DIR)/lib/libhelper.a
+endif
+INCS	:=  -I$(ROOT_DIR)/include/libhelper \
+            #-I./zlib \
+            #-I./tinyxml
+LIBS	:= 
+
+#**********************************************************
+
+CXX		:= g++
+LD		:= g++
+AR		:= ar rcs
+RANLIB	:= ranlib
+
+DEBUG_CXXFLAGS		:= -Wall -g -DDEBUG -Wno-deprecated
+RELEASE_CXXFLAGS	:= -Wall -O3 -DNDEBUG
+
+DEBUG_LDFLAGS		:= -g
+RELEASE_LDFLAGS		:=
+
+ifeq (YES, $(DEBUG))
+	CXXFLAGS		:= $(DEBUG_CXXFLAGS) $(DEFS)
+	LDFLLAGS		:= $(DEBUG_LDFLAGS) $(DEFS)
+#	OUTPUT			:= ../_bin/$(OUTPUT)
+else
+	CXXFLAGS		:= $(RELEASE_CXXFLAGS) $(DEFS)
+	LDFLLAGS		:= $(RELEASE_CSSFLAGS) $(DEFS)
+#	OUTPUT			:= ../bin/$(OUTPUT)
+endif                                                                                        
+
+all:$(OUTPUT)
+	$(info make: $(OUTPUT) success!)
+
+SRCS	:= $(wildcard *.cpp)
+
+OBJS	:= $(addsuffix .o, $(basename $(SRCS)))
+
+#**********************************************************
+#	OUTPUT
+#**********************************************************
+#include $(subst .cpp,.d,$(SRCS))
+
+#%.d : %.cpp
+#	$(CXX) -M $(CPPFLAGS) $(INCS) $< > $@.$$$$; \
+#	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+#	rm -f $@.$$$$;
+	
+$(OUTPUT):$(OBJS)
+	$(AR) $@ $(OBJS)
+	
+#**********************************************************
+#	common rule
+#**********************************************************
+
+%.o : %.cpp
+	$(CXX) -c -o $@ $(CXXFLAGS) $(INCS) $<
+
+clean:
+	rm -f $(OBJS) $(OUTPUT)

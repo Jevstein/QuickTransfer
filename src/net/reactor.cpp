@@ -135,17 +135,17 @@ void CReactor::do_event_queue()
     }
 }
 
-bool CReactor::add_socket(YI_SOCKET sockfd, int events, void* key)
+bool CReactor::add_socket(int sockfd, int events, void* key)
 {
     return io_model_->add_fd(sockfd, events, key);
 }
 
-bool CReactor::del_socket(YI_SOCKET sockfd)
+bool CReactor::del_socket(int sockfd)
 {
     return io_model_->del_fd(sockfd);
 }
 
-bool CReactor::modify_socket(YI_SOCKET sockfd, int events, void* key)
+bool CReactor::modify_socket(int sockfd, int events, void* key)
 {
     return io_model_->modify_fd(sockfd, events, key); 
 }

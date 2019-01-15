@@ -22,7 +22,7 @@ RAW_SRCS	:= $(wildcard *.c) $(wildcard *.cpp)
 
 # 2.TOOL CHAIN
 CXX				:= g++
-COMMON_FLAGS	:= -g -std=c++11
+COMMON_FLAGS	:= -g -O3 -fPIC -std=c++11
 CXX_FLAGS		:= $(COMMON_FLAGS)
 MKDIR_P     	:= mkdir -p
 CP          	:= cp

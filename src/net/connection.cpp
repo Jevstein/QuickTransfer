@@ -108,26 +108,25 @@ void CConnection::on_connect()
     is_client_ = true;
 
 	// 1.creater socket
-	sock_fd_ = socket_create(remote_addr_, remote_port_, SOCK_STREAM, &addrinfo_res_);
-	if (sock_fd_ < 0)
+	if (!INetSocket::socket_create(remote_addr_, remote_port_, SOCK_STREAM))
 	{
 		LOG_ERR("failed to create socket! ret=%d, err: %s", sock_fd_, p_socket_last_error());
 		return;
 	}
         
-    LOG_DBG("start connect to [%s|%d]", remote_addr_, remote_port_);
+    LOG_DBG("start connect to [%s:%d]", remote_addr_, remote_port_);
 
 	// 2.connect
-	int ret = socket_connect(sock_fd_, addrinfo_res_);
-	if (ret < 0)
+	bool ret = INetSocket::socket_connect();
+	if (!ret)
 	{
-		LOG_ERR("failed to connect[%s|%d]! ret=%d, err: %s", remote_addr_, remote_port_, ret, p_socket_last_error());
+		LOG_ERR("failed to connect[%s:%d]! err: %s", remote_addr_, remote_port_, p_socket_last_error());
 	}
 
     get_module()->get_reactor()->add_socket(sock_fd_, EPOLLOUT, (void *)this);
-    set_nonblocking(sock_fd_);
+    INetSocket::set_nonblocking(sock_fd_);
 
-    if(ret == 0)
+    if(ret)
     {
         _on_connection(sock_fd_);
     }
@@ -176,7 +175,7 @@ void CConnection::on_closeconnection()
 	
 }
 
-void CConnection::_on_connection(YI_SOCKET sockfd)
+void CConnection::_on_connection(int sockfd)
 {
 	sock_fd_ = sockfd;
     connect_status_ = CONNECTED;
@@ -214,8 +213,7 @@ void CConnection::_on_disconnect()
 		LOG_ERR("failed to delete socket! err: %s", p_socket_last_error());
 	}
     
-	socket_close(sock_fd_);
-	sock_fd_ = -1;
+	INetSocket::socket_close();
     
 	CTCPEvent* ev = get_module()->get_pool()->pop_tcpvent();
 	if(!ev)

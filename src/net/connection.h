@@ -56,7 +56,7 @@ public:
 	void on_disconnection();
 	void on_closeconnection();
 
-    void _on_connection(YI_SOCKET sockfd);
+    void _on_connection(int sockfd);
     void _on_disconnect();
 
 public:

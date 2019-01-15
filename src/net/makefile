@@ -23,7 +23,7 @@ RAW_SRCS	:= $(wildcard *.cpp) $(wildcard *.c)
 
 # 2.TOOL CHAIN
 CXX				:= g++
-COMMON_FLAGS	:= -g
+COMMON_FLAGS	:= -Wall -g -Wno-deprecated -fPIC -O3 -std=c++11
 CXX_FLAGS		:= $(COMMON_FLAGS)
 MKDIR_P     	:= mkdir -p
 CP          	:= cp
@@ -66,16 +66,17 @@ cleanall: clean cleaninstall
 $(OBJ_DIR)/%.o : %.cpp
 	$(info creating $@ ...)
 	@$(MKDIR_P) $(OBJ_DIR) ..
-	$(CXX) -c -fPIC $(CXXFLAGS) $(INCS_DIR) $< -o $@
+	$(CXX) -c $(CXXFLAGS) $(INCS_DIR) $< -o $@
 	
 $(OBJ_DIR)/%.o : %.c
 	$(info creating $@ ...)
 	@$(MKDIR_P) $(OBJ_DIR) ..
-	$(CXX) -c -fPIC $(CXXFLAGS) $(INCS_DIR) $< -o $@
+	$(CXX) -c $(CXXFLAGS) $(INCS_DIR) $< -o $@
 
 $(OBJ_DIR)/$(APP_OUT): $(OBJS)
 	$(info linking ...)
-	$(CXX) -shared $(CXX_FLAGS) -o $(OBJ_DIR)/$(APP_OUT) $(OBJS) $(LIBS)
+	$(CXX) -o $@ -shared $(CXX_FLAGS) $(OBJS) $(LIBS)
+	#$(CXX) -shared $(CXX_FLAGS) -o $(OBJ_DIR)/$(APP_OUT) $(OBJS) $(LIBS)
 
 $(OUT_DIR)/$(APP_OUT): $(OBJ_DIR)/$(APP_OUT)
 	$(info installing ...)

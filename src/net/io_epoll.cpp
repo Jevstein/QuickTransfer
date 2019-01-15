@@ -28,12 +28,12 @@ CIOEpoll::~CIOEpoll(void)
 
 int CIOEpoll::init(int fds /*= 4096*/)
 {
-	if (-1 != (epoll_fd = epoll_create(fds)))
+	if (-1 != (fd_ = epoll_create(fds)))
 	{
 		events_ = new epoll_event[fds];
 		max_events_ = fds;
 	}
-	return epoll_fd;
+	return fd_;
 }
 
 int CIOEpoll::add_fd(int sockfd, int events, void* key)

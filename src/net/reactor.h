@@ -21,9 +21,10 @@ public:
     bool fire();
     void misfire();
 
-	bool add_socket(YI_SOCKET sockfd, int events, void* key);
-	bool del_socket(YI_SOCKET sockfd);
-	bool modify_socket(YI_SOCKET sockfd, int events, void* key);
+    //bool add_socket(INetSocket *sock, int events);
+	bool add_socket(int sockfd, int events, void* key);
+	bool del_socket(int sockfd);
+	bool modify_socket(int sockfd, int events, void* key);
 
     void push_event(IEvent* ev) { que_of_event_.push(ev); }
 	void push_delayevent(IEvent* ev) { que_of_delay_event_.push(ev); }

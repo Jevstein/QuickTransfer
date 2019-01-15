@@ -45,7 +45,6 @@ using namespace std;
 
 #include "../helper/globaldefine.h"
 #include "../helper/osversion.h"
-#include "../helper/socket_api.h"
 // #include "../helper/log.h"
 #include "../helper/thread.h"
 #include "../helper/locker.hpp"
