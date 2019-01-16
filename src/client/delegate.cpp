@@ -2,7 +2,7 @@
 #include "delegate.h"
 
 CDelegate::CDelegate()
-: net_fac_("libnet.so")
+: net_fac_("./libnet.so")
 , net_module_(NULL)
 , tcp_connector_(NULL)
 , started_(true)

@@ -49,5 +49,5 @@ void CSession::on_disconnection()
 
 void CSession::on_recv(const char* data, int size)
 {
-    LOG_INF("CSession::on_recv");
+    LOG_INF("CSession::on_recv('%s', %d)", data, size);
 }

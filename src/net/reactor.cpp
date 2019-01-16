@@ -138,15 +138,15 @@ void CReactor::do_event_queue()
 
 bool CReactor::add_socket(INetSocket *sock, int events)
 {
-    return io_model_->add_fd(sock->get_sockid(), events, (void*)sock);
+    return (io_model_->add_fd(sock->get_sockid(), events, (void*)sock) == 0);
 }
 
 bool CReactor::del_socket(INetSocket *sock)
 {
-    return io_model_->del_fd(sock->get_sockid());
+    return (io_model_->del_fd(sock->get_sockid()) == 0);
 }
 
 bool CReactor::modify_socket(INetSocket *sock, int events)
 {
-    return io_model_->modify_fd(sock->get_sockid(), events, (void*)sock); 
+    return (io_model_->modify_fd(sock->get_sockid(), events, (void*)sock) == 0); 
 }
