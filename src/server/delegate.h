@@ -15,6 +15,9 @@ public:
 	void run();
 	void stop();
 
+public:
+	CSessionCreator* get_session_creator() { return &session_creator_; }
+
 private:
 	bool started_;
 
@@ -27,5 +30,6 @@ private:
 };
 
 #define DELEGATE__ CDelegate::GetInstancePtr()
+#define SESSION_CREATOR__ CDelegate::GetInstancePtr()->get_session_creator()
 
 #endif //_DELEGATE_H_

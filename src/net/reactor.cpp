@@ -71,7 +71,7 @@ void CReactor::run()
 				continue;
 			}
             
-            LOG_DBG("net_socket[%p]: idx=%d/%d, type=%d", net_socket, i, idxs, net_socket->socket_type());
+            LOG_DBG("net_socket[%p]: idx=%d/%d, socket_type=%d", net_socket, i, idxs, net_socket->socket_type());
             
 			if(net_socket->socket_type() == SO_LISTENER)
 			{//listen
@@ -136,17 +136,17 @@ void CReactor::do_event_queue()
     }
 }
 
-bool CReactor::add_socket(INetSocket *sock, int events)
+bool CReactor::add_epoll_event(INetSocket *sock, int events)
 {
     return (io_model_->add_fd(sock->get_sockid(), events, (void*)sock) == 0);
 }
 
-bool CReactor::del_socket(INetSocket *sock)
+bool CReactor::del_epoll_event(INetSocket *sock)
 {
     return (io_model_->del_fd(sock->get_sockid()) == 0);
 }
 
-bool CReactor::modify_socket(INetSocket *sock, int events)
+bool CReactor::modify_epoll_event(INetSocket *sock, int events)
 {
     return (io_model_->modify_fd(sock->get_sockid(), events, (void*)sock) == 0); 
 }

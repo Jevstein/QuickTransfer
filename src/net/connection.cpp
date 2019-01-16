@@ -47,7 +47,7 @@ bool CConnection::send(const char* data, int size)
 	ev->set(NULL, data, size);
 	
 	que_of_send_buffer_.push(ev);
-	get_module()->get_reactor()->modify_socket(this, EPOLLIN | EPOLLOUT);
+	get_module()->get_reactor()->modify_epoll_event(this, EPOLLIN | EPOLLOUT);
     
 	return true;
 }
@@ -123,7 +123,7 @@ void CConnection::on_connect()
 		LOG_ERR("failed to connect[%s:%d]! err: %s", remote_addr_, remote_port_, p_socket_last_error());
 	}
 
-    get_module()->get_reactor()->add_socket(this, EPOLLOUT);
+    get_module()->get_reactor()->add_epoll_event(this, EPOLLOUT);
     INetSocket::set_nonblocking(sock_fd_);
 
     if(ret)
@@ -230,7 +230,7 @@ void CConnection::on_send()
 		CTCPEvent* ev = que_of_send_buffer_.front();
 		if(ev == NULL)
         {
-			get_module()->get_reactor()->modify_socket(this, EPOLLIN);
+			get_module()->get_reactor()->modify_epoll_event(this, EPOLLIN);
 			return;
 		}
 
@@ -272,9 +272,9 @@ void CConnection::_on_connection(int sockfd)
 	clear_send_queue();
     
 	if(is_client_)
-		get_module()->get_reactor()->modify_socket(this, EPOLLIN);
+		get_module()->get_reactor()->modify_epoll_event(this, EPOLLIN);
 	else
-		get_module()->get_reactor()->add_socket(this, EPOLLIN);
+		get_module()->get_reactor()->add_epoll_event(this, EPOLLIN);
     
 	CTCPEvent* ev = get_module()->get_pool()->pop_tcpvent();
 	if(!ev)
@@ -296,7 +296,7 @@ void CConnection::_on_disconnect()
 	}
     
 	connect_status_ = UNCONNECT;
-	if(!get_module()->get_reactor()->del_socket(this))
+	if(!get_module()->get_reactor()->del_epoll_event(this))
 	{
 		LOG_ERR("failed to delete socket! err: %s", p_socket_last_error());
 	}
@@ -321,7 +321,7 @@ void CConnection::_on_disconnection()
 	connect_status_ = UNCONNECT;
 	clear_send_queue();
 
-	if (!get_module()->get_reactor()->del_socket(this))
+	if (!get_module()->get_reactor()->del_epoll_event(this))
 	{
 		LOG_ERR("failed to delete socket! err: %s", p_socket_last_error());
 	}

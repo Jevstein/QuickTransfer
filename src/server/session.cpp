@@ -15,6 +15,7 @@ CSession::~CSession()
 void CSession::release()
 {
     LOG_INF("CSession::release");
+    SESSION_CREATOR__->destroy(this);
 }
 
 void CSession::on_connection(IConnection* connection)

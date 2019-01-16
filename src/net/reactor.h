@@ -22,9 +22,9 @@ public:
     bool fire();
     void misfire();
 
-    bool add_socket(INetSocket *sock, int events);
-	bool del_socket(INetSocket *sock);
-	bool modify_socket(INetSocket *sock, int events);
+    bool add_epoll_event(INetSocket *sock, int events);
+	bool del_epoll_event(INetSocket *sock);
+	bool modify_epoll_event(INetSocket *sock, int events);
 
     void push_event(IEvent* ev) { que_of_event_.push(ev); }
 	void push_delayevent(IEvent* ev) { que_of_delay_event_.push(ev); }

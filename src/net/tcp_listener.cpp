@@ -60,7 +60,7 @@ bool CTCPListener::start_listen(const char* listen_addr, int port)
 		return false;
 	}
 
-	get_module()->get_reactor()->add_socket(this, EPOLLIN);
+	get_module()->get_reactor()->add_epoll_event(this, EPOLLIN);
     
 	return true;
 }
@@ -69,7 +69,7 @@ void CTCPListener::stop_listen()
 {
 	if (sock_fd_ != -1)
 	{
-		get_module()->get_reactor()->del_socket(this);
+		get_module()->get_reactor()->del_epoll_event(this);
 		INetSocket::socket_close();
 	}
 }
