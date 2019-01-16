@@ -23,6 +23,11 @@ public:
     virtual void on_disconnect();
     virtual void on_disconnection();
     virtual void on_recv(const char* data, int size);
+
+private:
+    IConnection *connection_;
+	std::string addr_;
+	short port_;
 };
 
 #endif //_SESSION_H_

@@ -13,7 +13,7 @@ CTCPListener::CTCPListener(void)
 : packet_parser_(NULL)
 , session_creator_(NULL)
 {
-
+	
 }
 
 CTCPListener::~CTCPListener(void)
@@ -30,7 +30,7 @@ void CTCPListener::release()
 bool CTCPListener::start_listen(const char* listen_addr, int port)
 {
 	// 1.create socket
-	if (INetSocket::socket_create(listen_addr, port, SOCK_STREAM) < 0)
+	if (!INetSocket::socket_create(listen_addr, port, SOCK_STREAM))
 	{
         LOG_ERR("failed to create socket! err: %s", p_socket_last_error());
         return false;
@@ -60,7 +60,7 @@ bool CTCPListener::start_listen(const char* listen_addr, int port)
 		return false;
 	}
 
-	get_module()->get_reactor()->add_socket(sock_fd_, EPOLLIN, (void *)this);
+	get_module()->get_reactor()->add_socket(this, EPOLLIN);
     
 	return true;
 }
@@ -69,7 +69,7 @@ void CTCPListener::stop_listen()
 {
 	if (sock_fd_ != -1)
 	{
-		get_module()->get_reactor()->del_socket(sock_fd_);
+		get_module()->get_reactor()->del_socket(this);
 		INetSocket::socket_close();
 	}
 }

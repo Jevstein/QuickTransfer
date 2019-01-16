@@ -3,6 +3,8 @@
 #include "delegate.h"
 
 CSession::CSession()
+: connection_(NULL)
+, port_(0)
 {
 }
 
@@ -18,6 +20,21 @@ void CSession::release()
 void CSession::on_connection(IConnection* connection)
 {
     LOG_INF("CSession::on_connection");
+
+    if (connection)
+    {
+		struct sockaddr peer_addr;
+		connection->get_addr(&peer_addr);
+		addr_ = std::string((const char*)inet_ntoa(((sockaddr_in*)&peer_addr)->sin_addr));
+		port_ = ntohs(((struct sockaddr_in *)&peer_addr)->sin_port);
+
+		LOG_INF("successfully connected to server[%s:%d]", addr_.c_str(), port_);
+
+        char msg[]="hello, client-bob!";
+        connection->send(msg, sizeof(msg));
+	}
+
+    connection_ = connection;
 }
 
 void CSession::on_disconnect()

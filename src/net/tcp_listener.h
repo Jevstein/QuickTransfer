@@ -23,6 +23,7 @@ public:
     virtual void set_creator(ISessionCreator* creator) { session_creator_ = creator; }
 
 	// INetIOEvent
+    virtual int socket_type() const { return SO_LISTENER; }
     virtual void on_accept();
     virtual void on_recv() {}
     virtual void on_send() {}

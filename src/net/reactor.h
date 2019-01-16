@@ -10,6 +10,7 @@
 
 #include "io_model.h"
 
+class INetSocket;
 class CReactor : public CThread
 {
 public:
@@ -21,10 +22,9 @@ public:
     bool fire();
     void misfire();
 
-    //bool add_socket(INetSocket *sock, int events);
-	bool add_socket(int sockfd, int events, void* key);
-	bool del_socket(int sockfd);
-	bool modify_socket(int sockfd, int events, void* key);
+    bool add_socket(INetSocket *sock, int events);
+	bool del_socket(INetSocket *sock);
+	bool modify_socket(INetSocket *sock, int events);
 
     void push_event(IEvent* ev) { que_of_event_.push(ev); }
 	void push_delayevent(IEvent* ev) { que_of_delay_event_.push(ev); }

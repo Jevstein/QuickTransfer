@@ -42,10 +42,11 @@ public:
     virtual void set_session(ISession* session) { session_ = session; }
     
     // INetSocket
-	virtual void on_recv() {}
-	virtual void on_send() {}
+    virtual int socket_type() const { return SO_CONNECTION; }
+	virtual void on_recv();
+	virtual void on_send();
 	virtual void on_accept() { assert(false); }
-    virtual void on_error() {}
+    virtual void on_error();
 
 public:
     void set_parser(IPacketParser* parser) { packet_parser_ = parser; }
@@ -58,6 +59,7 @@ public:
 
     void _on_connection(int sockfd);
     void _on_disconnect();
+	void _on_disconnection();
 
 public:
     ISession* get_session() { return session_; }

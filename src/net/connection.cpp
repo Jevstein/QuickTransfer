@@ -47,7 +47,7 @@ bool CConnection::send(const char* data, int size)
 	ev->set(NULL, data, size);
 	
 	que_of_send_buffer_.push(ev);
-	get_module()->get_reactor()->modify_socket(sock_fd_, EPOLLIN | EPOLLOUT, (void *)this);
+	get_module()->get_reactor()->modify_socket(this, EPOLLIN | EPOLLOUT);
     
 	return true;
 }
@@ -74,11 +74,11 @@ void CConnection::reconnect()
 
 void CConnection::get_addr(struct sockaddr* remoteaddr)
 {
-	//socklen_t len = sizeof(sockaddr);
-	//if(::getpeername(fd_, remoteaddr, &len))
-	//{
-	//	LOG_ERR("err: %s", p_socket_last_error());
-	//}
+	socklen_t len = sizeof(struct sockaddr);
+	if (0 != ::getpeername(sock_fd_, remoteaddr, &len))
+	{
+		LOG_ERR("err: %s", p_socket_last_error());
+	}
 }
 
 bool CConnection::connect(const char* addr, int port)
@@ -123,7 +123,7 @@ void CConnection::on_connect()
 		LOG_ERR("failed to connect[%s:%d]! err: %s", remote_addr_, remote_port_, p_socket_last_error());
 	}
 
-    get_module()->get_reactor()->add_socket(sock_fd_, EPOLLOUT, (void *)this);
+    get_module()->get_reactor()->add_socket(this, EPOLLOUT);
     INetSocket::set_nonblocking(sock_fd_);
 
     if(ret)
@@ -175,6 +175,94 @@ void CConnection::on_closeconnection()
 	
 }
 
+
+void CConnection::on_recv()
+{
+	char buf[1024] = {0};
+	int len = INetSocket::socket_recv(buf, sizeof(buf));
+	if(len <= 0)
+	{
+		int err = 0;
+		std::string error(p_socket_last_error(&err));
+		if (err != 10054 && err != 0)
+		{
+			LOG_ERR("failed to recv! len: %d, err: %s", len, error.c_str());
+		}
+
+		_on_disconnection();
+		return;
+	}
+
+	//debug:
+	if (session_)
+	{
+		session_->on_recv(buf, len);
+	}
+}
+
+void CConnection::on_send()
+{
+	if(is_client_ && connect_status_ != CONNECTED)
+	{
+		sockaddr_in6 peeraddr;
+		memset(&peeraddr, 0, sizeof(peeraddr));
+		socklen_t len = sizeof(sockaddr_in6);
+		int ret = ::getpeername(sock_fd_, (sockaddr*)&peeraddr, &len);
+		if(ret < 0)
+        {
+        	LOG_ERR("connect status! ret=%d, err: %d, %s", ret, errno, p_socket_last_error());
+			_on_disconnect();
+            return;
+		}
+		
+        _on_connection(sock_fd_);
+		return;
+	}
+
+	if(sock_fd_ == -1)
+	{
+		LOG_ERR("failed to OnSend, socket invalid!");
+		return;
+	}
+
+	do
+	{
+		CTCPEvent* ev = que_of_send_buffer_.front();
+		if(ev == NULL)
+        {
+			get_module()->get_reactor()->modify_socket(this, EPOLLIN);
+			return;
+		}
+
+		while (true)
+		{
+			int len =  INetSocket::socket_send(ev->get_data(), ev->get_length());
+			if (len == -1)
+			{
+				if(errno != EWOULDBLOCK)
+					LOG_ERR("failed to send! err: %s", p_socket_last_error());
+				return;
+			}
+
+			if(len < ev->get_length())
+			{
+				ev->transfer_data(len);
+			}
+			else
+			{
+				que_of_send_buffer_.pop();
+				get_module()->get_pool()->push_tcpevent(ev);
+				break;
+			}
+		}
+	} while(que_of_send_buffer_.size() > 0);
+}
+
+void CConnection::on_error()
+{
+	LOG_ERR("on_error...");
+}
+
 void CConnection::_on_connection(int sockfd)
 {
 	sock_fd_ = sockfd;
@@ -184,9 +272,9 @@ void CConnection::_on_connection(int sockfd)
 	clear_send_queue();
     
 	if(is_client_)
-		get_module()->get_reactor()->modify_socket(sock_fd_, EPOLLIN, (void *)this);
+		get_module()->get_reactor()->modify_socket(this, EPOLLIN);
 	else
-		get_module()->get_reactor()->add_socket(sock_fd_, EPOLLIN, (void *)this);
+		get_module()->get_reactor()->add_socket(this, EPOLLIN);
     
 	CTCPEvent* ev = get_module()->get_pool()->pop_tcpvent();
 	if(!ev)
@@ -208,7 +296,7 @@ void CConnection::_on_disconnect()
 	}
     
 	connect_status_ = UNCONNECT;
-	if(!get_module()->get_reactor()->del_socket(sock_fd_))
+	if(!get_module()->get_reactor()->del_socket(this))
 	{
 		LOG_ERR("failed to delete socket! err: %s", p_socket_last_error());
 	}
@@ -223,6 +311,31 @@ void CConnection::_on_disconnect()
 	}
     ev->set(this, NULL, (int)ON_DISCONNECT);
 	get_module()->main_event_queue()->push(ev);
+}
+
+void CConnection::_on_disconnection()
+{
+	if (sock_fd_ == -1)
+		return;
+
+	connect_status_ = UNCONNECT;
+	clear_send_queue();
+
+	if (!get_module()->get_reactor()->del_socket(this))
+	{
+		LOG_ERR("failed to delete socket! err: %s", p_socket_last_error());
+	}
+    INetSocket::socket_close();
+    
+	CTCPEvent* ev = get_module()->get_pool()->pop_tcpvent();
+	if(!ev)
+    {
+        LOG_EXP("CTCPEvent pool is over!");
+        return;
+	}
+    
+    ev->set(this, NULL, (int)ON_DISCONNECTION);
+    get_module()->main_event_queue()->push(ev);
 }
 
 void CConnection::clear_send_queue()

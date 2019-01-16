@@ -29,13 +29,11 @@ class INetSocket
 public:
     INetSocket();
     virtual ~INetSocket();
+    virtual int socket_type() const = 0;
     virtual void on_accept() = 0;
     virtual void on_recv() = 0;
     virtual void on_send() = 0;
     virtual void on_error() = 0;
-
-public:
-    int get_socket_type() const { return socket_type_; }
 
 public:
     bool socket_create(const char *addr, int port, int type = SOCK_STREAM);
@@ -51,8 +49,9 @@ public:
     static bool set_nonblocking(int sockfd);
     static bool get_addrinfo(const struct sockaddr *addr, char ipaddr[INET6_ADDRSTRLEN], int *port);
 
+    int get_sockid() const { return sock_fd_; }
+
 protected:
-    int socket_type_;//CONNTYPE
     int sock_fd_;
     struct addrinfo* addrinfo_res_;
 };

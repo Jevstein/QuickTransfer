@@ -2,6 +2,7 @@
 #include "reactor.h"
 #include "net_module.h"
 #include "net_event.h"
+#include "net_socket.h"
 
 CReactor::CReactor()
 : io_model_(NULL)
@@ -70,24 +71,24 @@ void CReactor::run()
 				continue;
 			}
             
-            LOG_DBG("net_socket[%p]: idx=%d/%d, type=%d", net_socket, i, idxs, net_socket->get_socket_type());
+            LOG_DBG("net_socket[%p]: idx=%d/%d, type=%d", net_socket, i, idxs, net_socket->socket_type());
             
-			if(net_socket->get_socket_type() == SO_LISTENER)
+			if(net_socket->socket_type() == SO_LISTENER)
 			{//listen
 				net_socket->on_accept();
 			}
 			else
 			{//socket
 				int events = io_model_->get_event(i);
-				if (events & EPOLLERR || events & EPOLLHUP)
-                {
-                    LOG_ERR("socket events error, events=%d, err: %s", events, p_socket_last_error());
-					//if(errno == 0)
-					//	net_socket->OnDisConnect();
-					// net_socket->OnSend();
-                    net_socket->on_error();
-                    continue;
-				}
+				// if (events & EPOLLERR || events & EPOLLHUP)
+                // {
+                //     LOG_ERR("socket events error, events=%d, err: %s", events, p_socket_last_error());
+				// 	//if(errno == 0)
+				// 	//	net_socket->OnDisConnect();
+				// 	// net_socket->OnSend();
+                //     net_socket->on_error();
+                //     continue;
+				// }
 
 				if(events & EPOLLIN)
 				{
@@ -135,17 +136,17 @@ void CReactor::do_event_queue()
     }
 }
 
-bool CReactor::add_socket(int sockfd, int events, void* key)
+bool CReactor::add_socket(INetSocket *sock, int events)
 {
-    return io_model_->add_fd(sockfd, events, key);
+    return io_model_->add_fd(sock->get_sockid(), events, (void*)sock);
 }
 
-bool CReactor::del_socket(int sockfd)
+bool CReactor::del_socket(INetSocket *sock)
 {
-    return io_model_->del_fd(sockfd);
+    return io_model_->del_fd(sock->get_sockid());
 }
 
-bool CReactor::modify_socket(int sockfd, int events, void* key)
+bool CReactor::modify_socket(INetSocket *sock, int events)
 {
-    return io_model_->modify_fd(sockfd, events, key); 
+    return io_model_->modify_fd(sock->get_sockid(), events, (void*)sock); 
 }
