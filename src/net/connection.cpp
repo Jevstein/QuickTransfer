@@ -193,10 +193,11 @@ void CConnection::on_recv()
 		return;
 	}
 
-	//debug:
-	if (session_)
+	CTCPEvent* ev = get_module()->get_pool()->pop_tcpvent();
+	if(ev)
 	{
-		session_->on_recv(buf, len);
+		ev->set(this, buf, len);
+		get_module()->main_event_queue()->push(ev);
 	}
 }
 

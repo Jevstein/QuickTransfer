@@ -10,6 +10,16 @@
 #define _CONNECTION_H_
 #include "net_socket.h"
 
+// ring buffer
+struct recv_buffer_t
+{
+	char* buffer;
+	uint capacity;
+	uint size;
+	uint begin_pos;
+	uint end_pos;
+};
+
 class CTCPEvent;
 class CConnection : public IConnection, public INetSocket
 {
@@ -72,8 +82,9 @@ protected:
 	IPacketParser* packet_parser_;
 
 	CEventQueue<CTCPEvent*, CLocker> que_of_send_buffer_;
-    char* recv_buffer_;//[MAX_OVERLAP_BUFFER];	--> // ring buffer
-	int recv_offset_;
+    // char* recv_buffer_;//[MAX_OVERLAP_BUFFER];	--> // ring buffer
+	// int recv_offset_;
+	recv_buffer_t recv_buffer_;
 
 private:
     bool is_client_;
