@@ -17,8 +17,8 @@ public:
 
 public:
 	void reset();
-	char* get_wdata(uint length, bool *rw);
-	void rewrite_data(char* data, uint length);
+	char* get_wdata(uint length, bool *once_enough);
+	void write_enough_data(char* data, uint length);
 
 private:
 	char temp_buffer_[4096];
