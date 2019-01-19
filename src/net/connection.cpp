@@ -178,8 +178,19 @@ void CConnection::on_closeconnection()
 
 void CConnection::on_recv()
 {
-	char buf[1024] = {0};
-	int len = INetSocket::socket_recv(buf, sizeof(buf));
+	if (!recv_buffer_)
+	{
+		//TODO: to use memory pool!!!
+		// ...
+		recv_buffer_ = new char[MAX_OVERLAP_BUFFER];
+		if (!recv_buffer_)
+		{
+			LOG_WAR("memory is not enough!");
+			return;
+		}
+	}
+
+	int len = INetSocket::socket_recv(recv_buffer_, MAX_OVERLAP_BUFFER - recv_offset_);
 	if(len <= 0)
 	{
 		int err = 0;
@@ -192,12 +203,42 @@ void CConnection::on_recv()
 		_on_disconnection();
 		return;
 	}
+	recv_offset_ += len;
 
-	CTCPEvent* ev = get_module()->get_pool()->pop_tcpvent();
-	if(ev)
+	while (true)
 	{
-		ev->set(this, buf, len);
-		get_module()->main_event_queue()->push(ev);
+		if(recv_offset_ <= 0)
+			return;
+
+		if (!packet_parser_)
+		{
+			LOG_ERR("no packet parser!");
+			recv_offset_ = 0;
+			return;
+		}
+
+		INetPacket *packet = packet_parser_->decode(recv_buffer_, recv_offset_);
+		if (!packet)
+		{
+			LOG_ERR("incomplete packet!");
+			return;
+		}
+		recv_offset_ -= packet->get_length(); 
+		if(recv_offset_ > 0)
+		{
+			// TODO: to use ring buffer
+			memcpy(recv_buffer_, recv_buffer_ + packet->get_length(), recv_offset_);
+		}
+			
+		if(packet_len <= 0 || packet_len >= MAX_OVERLAP_BUFFER)
+			return;
+
+		CTCPEvent* ev = get_module()->get_pool()->pop_tcpvent();
+		if(ev)
+		{
+			ev->set(this, buf, len);
+			get_module()->main_event_queue()->push(ev);
+		}
 	}
 }
 

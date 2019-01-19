@@ -82,7 +82,7 @@ protected:
 	IPacketParser* packet_parser_;
 
 	CEventQueue<CTCPEvent*, CLocker> que_of_send_buffer_;
-    char* recv_buffer_;//[MAX_OVERLAP_BUFFER];	--> // ring buffer
+    char* recv_buffer_;//--> TODO: to use ring buffer!!!
 	int recv_offset_;
 	// recv_buffer_t recv_buffer_;
 

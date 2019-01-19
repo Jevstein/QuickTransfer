@@ -9,6 +9,14 @@
 // #include "../common/protocol_codec.h"
 
 class ISession;
+
+class IPacket
+{
+public:
+    virtual char* get_data() = 0; 
+    virtual int get_length() = 0;
+};
+
 class IConnection
 {
 public:
