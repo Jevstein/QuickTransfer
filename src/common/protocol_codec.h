@@ -1,17 +1,21 @@
+﻿/*
+ *  protocol_codec.h 
+ *  protocol_codec
+ *
+ *  Created by Jevstein on 2019/1/19 17:52.
+ *  Copyright @ 2018year Jevstein. All rights reserved.
+ *	
+ */
+#ifndef _PROTOCOL_CODEC_H_
+#define _PROTOCOL_CODEC_H_
 
-#ifndef BRKS_INTF_PROTOCOL_CODEC_H_
-#define BRKS_INTF_PROTOCOL_CODEC_H_
-
-#include "glo_def.h"
-#include "eventtype.h"
-#include "user_events.h"
-
-class protocol_codec_t
+class CProtocolCodec : public IPacketParser
 {
 public:
-    virtual bool encode(IEvent* ev, u8* buffer, u32 size) = 0;
-    virtual IEvent* decode(u16 mid, u8* buffer, u32 size) = 0;
+	CProtocolCodec();
+	virtual ~CProtocolCodec();
+    virtual int encode(IPacket* packet, char* out_data, int& out_size);
+    virtual IPacket* decode(const char* data, int size, int& out_size);
 };
 
-#endif
-
+#endif//_PROTOCOL_CODEC_H_

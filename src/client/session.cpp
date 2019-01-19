@@ -45,7 +45,7 @@ void CSession::on_disconnection()
     LOG_INF("CSession::on_disconnection");
 }
 
-void CSession::on_recv(const char* data, int size)
+void CSession::on_recv(const IPacket *packet)
 {
-    LOG_INF("CSession::on_recv('%s', %d)", data, size);
+    LOG_INF("CSession::on_recv('%s', %d)", packet->data(), packet->length());
 }

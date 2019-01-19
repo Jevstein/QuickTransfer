@@ -22,7 +22,7 @@ public:
     virtual void on_connection(IConnection* connection);
     virtual void on_disconnect();
     virtual void on_disconnection();
-    virtual void on_recv(const char* data, int size);
+    virtual void on_recv(const IPacket *packet);
 
 private:
     IConnection *connection_;

@@ -10,23 +10,36 @@
 #define _CONNECTION_H_
 #include "net_socket.h"
 
-// ring buffer
-struct recv_buffer_t
+class CTCPEvent;
+class CConnection;
+
+#define _MAX_OVERLAP_BUFFER_ 65535
+
+// class CPacket
+class CPacket: public IPacket
 {
-	char* buffer;
-	uint capacity;
-	uint size;
-	uint begin_pos;
-	uint end_pos;
+public:
+    CPacket(){}
+    virtual ~CPacket(){}
+    virtual const char* data() const { return data_; }
+    virtual int length() const { return length_; }
+
+    int& get_length() { return length_; }
+    char* get_data() { return data_; }
+	void clear() { length_ = 0; }
+
+private:
+	char data_[_MAX_OVERLAP_BUFFER_];
+	int length_;
 };
 
-class CTCPEvent;
+// class CConnection
 class CConnection : public IConnection, public INetSocket
 {
 public:
 	enum
 	{
-		MAX_OVERLAP_BUFFER = 65535, /*MAX_PACKET_LEN * 2*/
+		MAX_OVERLAP_BUFFER = _MAX_OVERLAP_BUFFER_, /*MAX_PACKET_LEN * 2*/
 		ON_CONNECT = -1,
 		ON_CONNECTION = -2,
 		ON_DISCONNECT = -3,
@@ -44,7 +57,8 @@ public:
 public:
 	CConnection();
     virtual ~CConnection();
-    virtual bool send(const char* data, int size);
+    virtual bool send(const IPacket *packet);
+    virtual bool send(const char *data, int len);
     virtual void close_connection();
     virtual void reconnect();
     virtual bool is_connected() { return (CONNECTED == connect_status_); }
@@ -59,7 +73,7 @@ public:
     virtual void on_error();
 
 public:
-    void set_parser(IPacketParser* parser) { packet_parser_ = parser; }
+    void set_parser(IPacketParser* parser);
 	bool connect(const char* addr, int port);
 	void on_connect();
     void on_connection();
@@ -85,6 +99,7 @@ protected:
     char* recv_buffer_;//--> TODO: to use ring buffer!!!
 	int recv_offset_;
 	// recv_buffer_t recv_buffer_;
+	CPacket packet_;
 
 private:
     bool is_client_;

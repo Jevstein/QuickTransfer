@@ -12,13 +12,16 @@ DEBUG 		:= YES
 APP			:= libhelper
 APP_OUT		:= libhelper.a
 ROOT_DIR	:= ../..
-PROJ_DIR	:= ..
+PROJ_DIR	:= .
 OUT_DIR		:= $(ROOT_DIR)/lib
 DEFS_DIR	:= 
-INCS_DIR	:= -I$(ROOT_DIR)/include
+INCS_DIR	:= -I$(ROOT_DIR)/include \
+			   -I$(PROJ_DIR)/zlib
 LIBS_DIR	:= 
 LIBS		:= 
-RAW_SRCS	:= $(wildcard *.c) $(wildcard *.cpp)
+VPATH       := $(PROJ_DIR)/zlib
+RAW_SRCS	:= $(wildcard *.c) $(wildcard *.cpp) \
+			   $(wildcard $(PROJ_DIR)/zlib/*.c)
 
 # 2.TOOL CHAIN
 CXX				:= g++

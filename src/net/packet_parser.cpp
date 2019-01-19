@@ -529,7 +529,7 @@ static const ulong64 table[4*256] = {
 
 unsigned char key1[16] = { 117, 42, 81, 222, 211, 85, 189, 17, 92, 159, 6, 102, 179, 2, 100, 0 };
 
-CNetPacketParser::CNetPacketParser(void)
+CPacketParser::CPacketParser()
 {
 	unsigned char key2[16] = { 127, 31, 79, 202, 251, 81, 179, 67, 90, 151, 216, 10, 171, 243, 1, 0 };
 	for(int i = 0; i < 16; ++i)
@@ -539,140 +539,147 @@ CNetPacketParser::CNetPacketParser(void)
 	sh_seed_ = 1606;
 }
 
-CNetPacketParser::~CNetPacketParser(void)
+CPacketParser::~CPacketParser()
 {
 }
 
-int CNetPacketParser::encode(const char* in_data, int in_len, char* out_data, int& out_len)
+int CPacketParser::encode(const IPacket* packet, char* out_data, int& out_len)
 {
-	// int nPacketLen = CConnection::MAX_OVERLAP_BUFFER;
-	// char cCompress = 0;
-	// uchar cCRC = 0;
-	// short sInLen = 0;
-	// ushort sVerifyCode = 0;
-	// unsigned char* pData = (unsigned char*)(out_data + 6);//压缩数据包
+	return encode(packet->data(), packet->length(), out_data, out_len);
+}
 
-	// if(in_len > 512)
-	// {
-    //     uLongf length = (uLongf)nPacketLen;
-	// 	int ret = compress((Bytef*)pData, &length, (Bytef*)in_data, in_len);
-	// 	if(ret != Z_OK)
-	// 	{
-	// 		LOG_ERR("failed to compress by zlib! ret=%d", ret);
-	// 		return 0;
-	// 	}
-    //     nPacketLen = (int)length;
-	// 	sInLen = (short)nPacketLen;
-	// 	sVerifyCode = sInLen ^ sh_seed_;
-	// 	cCompress = 1;
-	// }
-	// else
-	// {
-	// 	memcpy(pData, in_data, in_len);
-	// 	nPacketLen = in_len;
-	// 	sInLen = (short)nPacketLen;
-	// 	sVerifyCode = sInLen ^ sh_seed_;
-	// 	for(int i = 0; i < nPacketLen; ++i)
-	// 	{
-	// 		cCRC += (pData[i] << 1);
-	// 		pData[i] = (i % 2 == 0) ? ((pData[i] << 2) | (pData[i] >> 6)) : ((pData[i] << 5) | (pData[i] >> 3));
-	// 	}
-	// 	cCRC ^= symmetric_key_[12];
-	// 	uchar* pTable = (uchar*)&table[cCRC*4];
-	// 	int k = 0;
-	// 	for(int i = 0; i < nPacketLen; ++i)
-	// 	{
-	// 		pData[i] ^= pTable[k];
-	// 		++k;
-	// 		k %= 32;
-	// 	}
-	// }
+int CPacketParser::decode(IPacket *out_packet, int& max_len, const char* in_data, int in_len)
+{
+	return decode(in_data, in_len, (char *)out_packet->data(), max_len);
+}
 
-	// sInLen = htons(sInLen); //网络序
-	// sVerifyCode = htons(sVerifyCode);
-	// memcpy(out_data, &sInLen, 2);
-	// memcpy(out_data + 2, &sVerifyCode, 2);
-	// memcpy(out_data + 4, &cCompress, 1);//压缩标记
-	// memcpy(out_data + 5, &cCRC, 1);		//校验标记
+int CPacketParser::encode(const char* in_data, int in_len, char* out_data, int& out_len)
+{
+	int nPacketLen = CConnection::MAX_OVERLAP_BUFFER;
+	char cCompress = 0;
+	uchar cCRC = 0;
+	short sInLen = 0;
+	ushort sVerifyCode = 0;
+	unsigned char* pData = (unsigned char*)(out_data + 6);//压缩数据包
 
-	// out_len = nPacketLen + 6;
+	if(in_len > 512)
+	{
+        uLongf length = (uLongf)nPacketLen;
+		int ret = compress((Bytef*)pData, &length, (Bytef*)in_data, in_len);
+		if(ret != Z_OK)
+		{
+			LOG_ERR("failed to compress by zlib! ret=%d", ret);
+			return 0;
+		}
+        nPacketLen = (int)length;
+		sInLen = (short)nPacketLen;
+		sVerifyCode = sInLen ^ sh_seed_;
+		cCompress = 1;
+	}
+	else
+	{
+		memcpy(pData, in_data, in_len);
+		nPacketLen = in_len;
+		sInLen = (short)nPacketLen;
+		sVerifyCode = sInLen ^ sh_seed_;
+		for(int i = 0; i < nPacketLen; ++i)
+		{
+			cCRC += (pData[i] << 1);
+			pData[i] = (i % 2 == 0) ? ((pData[i] << 2) | (pData[i] >> 6)) : ((pData[i] << 5) | (pData[i] >> 3));
+		}
+		cCRC ^= symmetric_key_[12];
+		uchar* pTable = (uchar*)&table[cCRC*4];
+		int k = 0;
+		for(int i = 0; i < nPacketLen; ++i)
+		{
+			pData[i] ^= pTable[k];
+			++k;
+			k %= 32;
+		}
+	}
+
+	sInLen = htons(sInLen); //网络序
+	sVerifyCode = htons(sVerifyCode);
+	memcpy(out_data, &sInLen, 2);
+	memcpy(out_data + 2, &sVerifyCode, 2);
+	memcpy(out_data + 4, &cCompress, 1);//压缩标记
+	memcpy(out_data + 5, &cCRC, 1);		//校验标记
+
+	out_len = nPacketLen + 6;
 	return out_len;
 }
 
-int CNetPacketParser::decode(const char* in_data, int in_len, char* out_data, int& max_len)
+int CPacketParser::decode(const char* in_data, int in_len, char* out_data, int& max_len)
 {
-	// if(in_len < 6)
-	// 	return 0;
+	if(in_len < 6)
+		return 0;
     
-	// char cCompress = 0;
-	// uchar cCRC = 0;
-	// short usPacketLen = 0;
-	// ushort usVerifyCode = 0;
-	// memcpy(&usPacketLen, in_data, 2);
-	// memcpy(&usVerifyCode, &in_data[2], 2);
-	// memcpy(&cCompress, &in_data[4], 1);//压缩标记
-	// memcpy(&cCRC, &in_data[5], 1);//校验标记
-	// usPacketLen = ntohs(usPacketLen); //主机序
-	// usVerifyCode = ntohs(usVerifyCode);
+	char cCompress = 0;
+	uchar cCRC = 0;
+	short usPacketLen = 0;
+	ushort usVerifyCode = 0;
+	memcpy(&usPacketLen, in_data, 2);
+	memcpy(&usVerifyCode, &in_data[2], 2);
+	memcpy(&cCompress, &in_data[4], 1);//压缩标记
+	memcpy(&cCRC, &in_data[5], 1);//校验标记
+	usPacketLen = ntohs(usPacketLen); //主机序
+	usVerifyCode = ntohs(usVerifyCode);
 
-	// int kk = usPacketLen ^ sh_seed_;
-	// if(kk != usVerifyCode || usPacketLen > max_len)
-	// {
-	// 	max_len = 0; //数据包错误
-	// 	return 6; //4个字节作废
-	// }
-	// else if(in_len - 6 < usPacketLen ) //数据包不完整
-	// {
-	// 	max_len = 0;
-	// 	return 0;
-	// }
-	// else
-	// {
-	// 	if(cCompress != 1)
-	// 	{
-	// 		max_len = usPacketLen;
-	// 		memcpy(out_data, &in_data[6], usPacketLen);
-	// 		uchar cValiate = 0;
+	int kk = usPacketLen ^ sh_seed_;
+	if(kk != usVerifyCode || usPacketLen > max_len)
+	{
+		max_len = 0; //数据包错误
+		return 6; //4个字节作废
+	}
+	else if(in_len - 6 < usPacketLen ) //数据包不完整
+	{
+		max_len = 0;
+		return 0;
+	}
+	else
+	{
+		if(cCompress != 1)
+		{
+			max_len = usPacketLen;
+			memcpy(out_data, &in_data[6], usPacketLen);
+			uchar cValiate = 0;
 
-	// 		unsigned char* pData = (unsigned char*)out_data;
+			unsigned char* pData = (unsigned char*)out_data;
 
-	// 		uchar* pTable = (uchar*)&table[cCRC*4];
-	// 		int k = 0;
-	// 		for(int i = 0; i < usPacketLen; ++i)
-	// 		{
-	// 			pData[i] ^= pTable[k];
-	// 			++k;
-	// 			k %= 32;
-	// 		}
-	// 		for(int i = 0; i < usPacketLen; ++i)
-	// 		{
-	// 			pData[i] = (i % 2 == 0) ? ((pData[i] << 6) | (pData[i] >> 2)) :	((pData[i] << 3) | (pData[i] >> 5));
-	// 			cValiate += (pData[i] << 1);
-	// 		}
-	// 		cValiate ^= symmetric_key_[12];
-	// 		if(cCRC != cValiate)
-	// 		{
-	// 			max_len = 0; //数据包错误
-	// 			return 6; //4个字节作废
-	// 		}
-	// 	}
-	// 	else
-	// 	{
-	// 		unsigned char* pData = (unsigned char*)&in_data[6];
-	// 		//解压数据
-    //         uLongf length = (unsigned long)max_len;
-	// 		int ret = uncompress((Bytef*)out_data, &length, (Bytef*)pData, usPacketLen);
-	// 		if(ret != Z_OK)
-	// 		{
-	// 			LOG_ERR("zlib compress failed ret %d", ret);
-	// 			return 6;
-	// 		}
-    //         max_len = (int)length;
-	// 	}
+			uchar* pTable = (uchar*)&table[cCRC*4];
+			int k = 0;
+			for(int i = 0; i < usPacketLen; ++i)
+			{
+				pData[i] ^= pTable[k];
+				++k;
+				k %= 32;
+			}
+			for(int i = 0; i < usPacketLen; ++i)
+			{
+				pData[i] = (i % 2 == 0) ? ((pData[i] << 6) | (pData[i] >> 2)) :	((pData[i] << 3) | (pData[i] >> 5));
+				cValiate += (pData[i] << 1);
+			}
+			cValiate ^= symmetric_key_[12];
+			if(cCRC != cValiate)
+			{
+				max_len = 0; //数据包错误
+				return 6; //4个字节作废
+			}
+		}
+		else
+		{
+			unsigned char* pData = (unsigned char*)&in_data[6];
+			//解压数据
+            uLongf length = (unsigned long)max_len;
+			int ret = uncompress((Bytef*)out_data, &length, (Bytef*)pData, usPacketLen);
+			if(ret != Z_OK)
+			{
+				LOG_ERR("zlib compress failed ret %d", ret);
+				return 6;
+			}
+            max_len = (int)length;
+		}
         
-	// 	return usPacketLen + 6;
-	// }
-
-	return 0;
+		return usPacketLen + 6;
+	}
 }
-

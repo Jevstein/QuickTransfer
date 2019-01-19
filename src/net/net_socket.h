@@ -41,8 +41,8 @@ public:
     bool socket_bind();
     bool socket_listen(int backlog = 128);
     int socket_accept(struct sockaddr_in6 *addr);
-    int socket_send(const void *buf, size_t len);
-    int socket_recv(void *buf, size_t len);
+    int socket_send(const void *buf, size_t len, int flags =0);
+    int socket_recv(void *buf, size_t len, int flags =0);
     void socket_close();
 
     bool set_reuse_port();

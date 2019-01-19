@@ -1,8 +1,9 @@
 ﻿#include "prefixhead.h"
 #include "connection.h"
-// #include "unprtt.h"
+#include "unprtt.h"
 #include "net_module.h"
 #include "net_event.h"
+#include "packet_parser.h"
 
 CConnection::CConnection()
 : is_client_(false)
@@ -18,7 +19,25 @@ CConnection::~CConnection()
 
 }
 
-bool CConnection::send(const char* data, int size)
+void CConnection::set_parser(IPacketParser* parser)
+{
+	if (parser == NULL)
+	{
+		static CPacketParser parse__;
+		packet_parser_ = &parse__;
+	}
+	else
+	{
+		packet_parser_ = parser;
+	}
+}
+	
+bool CConnection::send(const IPacket *packet)
+{
+	return this->send(packet->data(), packet->length());
+}
+
+bool CConnection::send(const char *data, int len)
 {
 	if(is_client_ && !is_connected())
 	{
@@ -40,11 +59,21 @@ bool CConnection::send(const char* data, int size)
 		return false;
     }
 	
-    // char tmp_buf[MAX_OVERLAP_BUFFER] = {0};
-	// int tmp_len = MAX_OVERLAP_BUFFER;
-	// packet_parser_->encode(data, size, tmp_buf, tmp_len);
-	// ev->set(NULL, tmp_buf, tmp_len);
-	ev->set(NULL, data, size);
+	if (!packet_parser_)
+	{
+		LOG_ERR("no packet parser!");
+		return false;
+
+		// ev->set(NULL, data, len);
+		// que_of_send_buffer_.push(ev);
+		// get_module()->get_reactor()->modify_epoll_event(this, EPOLLIN | EPOLLOUT);
+		// return true;
+	}
+
+	char tmp_buf[MAX_OVERLAP_BUFFER] = {0};
+	int tmp_len = MAX_OVERLAP_BUFFER;
+	packet_parser_->encode(data, len, tmp_buf, tmp_len);
+	ev->set(NULL, tmp_buf, tmp_len);
 	
 	que_of_send_buffer_.push(ev);
 	get_module()->get_reactor()->modify_epoll_event(this, EPOLLIN | EPOLLOUT);
@@ -178,14 +207,18 @@ void CConnection::on_closeconnection()
 
 void CConnection::on_recv()
 {
+	// TODO: 待优化-"为了兼容多种编解码器，导致多次内存拷贝"，如:
+	// 1.recv拷贝
+	// 2.parser拷贝
+	// 3.push队列拷贝
+	// ***
+
 	if (!recv_buffer_)
 	{
-		//TODO: to use memory pool!!!
-		// ...
-		recv_buffer_ = new char[MAX_OVERLAP_BUFFER];
+		recv_buffer_ = static_cast<char*>(get_module()->get_memory()->Malloc(MAX_OVERLAP_BUFFER));
 		if (!recv_buffer_)
 		{
-			LOG_WAR("memory is not enough!");
+			LOG_EXP("memory is not enough!");
 			return;
 		}
 	}
@@ -193,13 +226,15 @@ void CConnection::on_recv()
 	int len = INetSocket::socket_recv(recv_buffer_, MAX_OVERLAP_BUFFER - recv_offset_);
 	if(len <= 0)
 	{
-		int err = 0;
-		std::string error(p_socket_last_error(&err));
-		if (err != 10054 && err != 0)
+		if(len == -1 && (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) )
 		{
-			LOG_ERR("failed to recv! len: %d, err: %s", len, error.c_str());
+			LOG_WAR("recv invalid len: %d!", len);
+			return;
 		}
 
+		int err = 0;
+		std::string error(p_socket_last_error(&err));
+		LOG_ERR("failed to recv! len: %d, err: %s", len, error.c_str());
 		_on_disconnection();
 		return;
 	}
@@ -217,26 +252,33 @@ void CConnection::on_recv()
 			return;
 		}
 
-		INetPacket *packet = packet_parser_->decode(recv_buffer_, recv_offset_);
-		if (!packet)
+		packet_.clear();
+
+		int max_len = MAX_OVERLAP_BUFFER;
+		int out_size = packet_parser_->decode(&packet_, max_len, recv_buffer_, recv_offset_);
+		if (out_size <= 0)
 		{
-			LOG_ERR("incomplete packet!");
+			LOG_INF("incomplete packet! size=%d", out_size);
 			return;
 		}
-		recv_offset_ -= packet->get_length(); 
+
+		recv_offset_ -= out_size; 
 		if(recv_offset_ > 0)
 		{
 			// TODO: to use ring buffer
-			memcpy(recv_buffer_, recv_buffer_ + packet->get_length(), recv_offset_);
+			memcpy(recv_buffer_, recv_buffer_ + out_size, recv_offset_);
 		}
 			
-		if(packet_len <= 0 || packet_len >= MAX_OVERLAP_BUFFER)
+		if(max_len <= 0 || max_len >= MAX_OVERLAP_BUFFER)
+		{
+			LOG_WAR("invalid max_len: %d !", max_len);
 			return;
+		}
 
 		CTCPEvent* ev = get_module()->get_pool()->pop_tcpvent();
 		if(ev)
 		{
-			ev->set(this, buf, len);
+			ev->set(this, packet_.data(), packet_.length());
 			get_module()->main_event_queue()->push(ev);
 		}
 	}
@@ -278,7 +320,7 @@ void CConnection::on_send()
 
 		while (true)
 		{
-			int len =  INetSocket::socket_send(ev->get_data(), ev->get_length());
+			int len = INetSocket::socket_send(ev->get_data(), ev->get_length(), MSG_NOSIGNAL);
 			if (len == -1)
 			{
 				if(errno != EWOULDBLOCK)

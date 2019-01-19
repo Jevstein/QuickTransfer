@@ -111,9 +111,9 @@ int INetSocket::socket_accept(struct sockaddr_in6 *addr)
 	return connfd;
 }
 
-int INetSocket::socket_send(const void *buf, size_t len)
+int INetSocket::socket_send(const void *buf, size_t len, int flags /*=0*/)
 {
-	int ret = ::send(sock_fd_, buf, len, 0);
+	int ret = ::send(sock_fd_, buf, len, flags);
 	if (ret < 0)
 	{
 		LOG_ERR("failed to send! ret=%d, err: %s", ret, strerror(errno));
@@ -122,9 +122,9 @@ int INetSocket::socket_send(const void *buf, size_t len)
 	return ret;
 }
 
-int INetSocket::socket_recv(void *buf, size_t len)
+int INetSocket::socket_recv(void *buf, size_t len, int flags /*=0*/)
 {
-	int ret = ::recv(sock_fd_, buf, len, 0);
+	int ret = ::recv(sock_fd_, buf, len, flags);
 	if (ret < 0)
 	{
 		LOG_ERR("failed to recv! ret=%d, err: %s", ret, strerror(errno));
