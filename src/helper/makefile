@@ -16,12 +16,12 @@ PROJ_DIR	:= .
 OUT_DIR		:= $(ROOT_DIR)/lib
 DEFS_DIR	:= 
 INCS_DIR	:= -I$(ROOT_DIR)/include \
-			   -I$(PROJ_DIR)/zlib
+			   #-I$(PROJ_DIR)/zlib
 LIBS_DIR	:= 
 LIBS		:= 
 VPATH       := $(PROJ_DIR)/zlib
 RAW_SRCS	:= $(wildcard *.c) $(wildcard *.cpp) \
-			   $(wildcard $(PROJ_DIR)/zlib/*.c)
+			   #$(wildcard $(PROJ_DIR)/zlib/*.c)
 
 # 2.TOOL CHAIN
 CXX				:= g++

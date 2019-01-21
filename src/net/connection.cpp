@@ -3,7 +3,9 @@
 #include "unprtt.h"
 #include "net_module.h"
 #include "net_event.h"
-#include "packet_parser.h"
+// #include "packet_parser.h"
+#include "../parser/glo_def.h"
+#include "../parser/protocol_head.h"
 
 CConnection::CConnection()
 : is_client_(false)
@@ -21,15 +23,15 @@ CConnection::~CConnection()
 
 void CConnection::set_parser(IPacketParser* parser)
 {
-	if (parser == NULL)
-	{
-		static CPacketParser parse__;
-		packet_parser_ = &parse__;
-	}
-	else
-	{
+	// if (parser == NULL)
+	// {
+	// 	static CPacketParser parse__;
+	// 	packet_parser_ = &parse__;
+	// }
+	// else
+	// {
 		packet_parser_ = parser;
-	}
+	// }
 }
 	
 bool CConnection::send(const IPacket *packet)
@@ -61,13 +63,13 @@ bool CConnection::send(const char *data, int len)
 	
 	if (!packet_parser_)
 	{
-		LOG_ERR("no packet parser!");
-		return false;
+		// LOG_ERR("no packet parser!");
+		// return false;
 
-		// ev->set(NULL, data, len);
-		// que_of_send_buffer_.push(ev);
-		// get_module()->get_reactor()->modify_epoll_event(this, EPOLLIN | EPOLLOUT);
-		// return true;
+		ev->set(NULL, data, len);
+		que_of_send_buffer_.push(ev);
+		get_module()->get_reactor()->modify_epoll_event(this, EPOLLIN | EPOLLOUT);
+		return true;
 	}
 
 	char tmp_buf[MAX_OVERLAP_BUFFER] = {0};
@@ -204,85 +206,141 @@ void CConnection::on_closeconnection()
 	
 }
 
-
+#define BUF_SIZE 1024
 void CConnection::on_recv()
 {
-	// TODO: 待优化-"为了兼容多种编解码器，导致多次内存拷贝"，如:
-	// 1.recv拷贝
-	// 2.parser拷贝
-	// 3.push队列拷贝
-	// ***
+    char buf[BUF_SIZE] = {0};
+	int result = 1;
 
-	if (!recv_buffer_)
+	int cnt = nio_recv(buf, sizeof(protocol_head_t), &result);
+	if (result <= 0)
 	{
-		recv_buffer_ = static_cast<char*>(get_module()->get_memory()->Malloc(MAX_OVERLAP_BUFFER));
-		if (!recv_buffer_)
+		if (result == -1)
 		{
-			LOG_EXP("memory is not enough!");
-			return;
+			int err = 0;
+			std::string error(p_socket_last_error(&err));
+			LOG_ERR("failed to recv! len: %d, err: %s", len, error.c_str());
+			_on_disconnection();
 		}
-	}
-
-	int len = INetSocket::socket_recv(recv_buffer_, MAX_OVERLAP_BUFFER - recv_offset_);
-	if(len <= 0)
-	{
-		if(len == -1 && (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) )
-		{
-			LOG_WAR("recv invalid len: %d!", len);
-			return;
-		}
-
-		int err = 0;
-		std::string error(p_socket_last_error(&err));
-		LOG_ERR("failed to recv! len: %d, err: %s", len, error.c_str());
-		_on_disconnection();
 		return;
 	}
-	recv_offset_ += len;
 
-	while (true)
+	//decode head
+	protocol_head_t proto_head;
+	protocol_head_codec_t head_codec;
+	head_codec.decode(buf, BUF_SIZE, &proto_head);
+
+	result = 1;
+	cnt = nio_recv(buf + sizeof(protocol_head_t), proto_head.len_, &result);
+	if (result <= 0)
 	{
-		if(recv_offset_ <= 0)
-			return;
-
-		if (!packet_parser_)
+		if (result == -1)
 		{
-			LOG_ERR("no packet parser!");
-			recv_offset_ = 0;
-			return;
+			int err = 0;
+			std::string error(p_socket_last_error(&err));
+			LOG_ERR("failed to recv! len: %d, err: %s", len, error.c_str());
+			_on_disconnection();
 		}
+		return;
+	}
 
-		packet_.clear();
-
-		int max_len = MAX_OVERLAP_BUFFER;
-		int out_size = packet_parser_->decode(&packet_, max_len, recv_buffer_, recv_offset_);
-		if (out_size <= 0)
-		{
-			LOG_INF("incomplete packet! size=%d", out_size);
-			return;
-		}
-
-		recv_offset_ -= out_size; 
-		if(recv_offset_ > 0)
-		{
-			// TODO: to use ring buffer
-			memcpy(recv_buffer_, recv_buffer_ + out_size, recv_offset_);
-		}
-			
-		if(max_len <= 0 || max_len >= MAX_OVERLAP_BUFFER)
-		{
-			LOG_WAR("invalid max_len: %d !", max_len);
-			return;
-		}
-
+	IPacket* packet = packet_parser_->decode(proto_head.msg_id_, buf + sizeof(protocol_head_t), proto_head.len_);
+	if (packet)
+	{
 		CTCPEvent* ev = get_module()->get_pool()->pop_tcpvent();
 		if(ev)
 		{
-			ev->set(this, packet_.data(), packet_.length());
+			ev->set(this, packet->data(), packet->length());
 			get_module()->main_event_queue()->push(ev);
 		}
 	}
 }
+
+// void CConnection::on_recv()
+// {
+// 	// TODO: 待优化-"为了兼容多种编解码器，导致多次内存拷贝"，如:
+// 	// 1.recv拷贝
+// 	// 2.parser拷贝
+// 	// 3.push队列拷贝
+// 	// ***
+
+// 	if (!recv_buffer_)
+// 	{
+// 		recv_buffer_ = static_cast<char*>(get_module()->get_memory()->Malloc(MAX_OVERLAP_BUFFER));
+// 		if (!recv_buffer_)
+// 		{
+// 			LOG_EXP("memory is not enough!");
+// 			return;
+// 		}
+// 	}
+
+// 	int len = INetSocket::socket_recv(recv_buffer_, MAX_OVERLAP_BUFFER - recv_offset_);
+// 	if(len <= 0)
+// 	{
+// 		if(len == -1 && (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN) )
+// 		{
+// 			LOG_WAR("recv invalid len: %d!", len);
+// 			return;
+// 		}
+
+// 		int err = 0;
+// 		std::string error(p_socket_last_error(&err));
+// 		LOG_ERR("failed to recv! len: %d, err: %s", len, error.c_str());
+// 		_on_disconnection();
+// 		return;
+// 	}
+// 	recv_offset_ += len;
+
+// 	CTCPEvent* ev = get_module()->get_pool()->pop_tcpvent();
+// 	if(ev)
+// 	{
+// 		ev->set(this, recv_buffer_, len);
+// 		get_module()->main_event_queue()->push(ev);
+// 	}
+
+// 	// while (true)
+// 	// {
+// 	// 	if(recv_offset_ <= 0)
+// 	// 		return;
+
+// 	// 	if (!packet_parser_)
+// 	// 	{
+// 	// 		LOG_ERR("no packet parser!");
+// 	// 		recv_offset_ = 0;
+// 	// 		return;
+// 	// 	}
+
+// 	// 	packet_.clear();
+
+// 	// 	int max_len = MAX_OVERLAP_BUFFER;
+// 	// 	int out_size = packet_parser_->decode(&packet_, max_len, recv_buffer_, recv_offset_);
+// 	// 	if (out_size <= 0)
+// 	// 	{
+// 	// 		LOG_INF("incomplete packet! size=%d", out_size);
+// 	// 		return;
+// 	// 	}
+
+// 	// 	recv_offset_ -= out_size; 
+// 	// 	if(recv_offset_ > 0)
+// 	// 	{
+// 	// 		// TODO: to use ring buffer
+// 	// 		memcpy(recv_buffer_, recv_buffer_ + out_size, recv_offset_);
+// 	// 	}
+			
+// 	// 	if(max_len <= 0 || max_len >= MAX_OVERLAP_BUFFER)
+// 	// 	{
+// 	// 		LOG_WAR("invalid max_len: %d !", max_len);
+// 	// 		return;
+// 	// 	}
+
+// 	// 	CTCPEvent* ev = get_module()->get_pool()->pop_tcpvent();
+// 	// 	if(ev)
+// 	// 	{
+// 	// 		ev->set(this, packet_.data(), packet_.length());
+// 	// 		get_module()->main_event_queue()->push(ev);
+// 	// 	}
+// 	// }
+// }
 
 void CConnection::on_send()
 {
@@ -320,7 +378,8 @@ void CConnection::on_send()
 
 		while (true)
 		{
-			int len = INetSocket::socket_send(ev->get_data(), ev->get_length(), MSG_NOSIGNAL);
+			// int len = INetSocket::socket_send(ev->get_data(), ev->get_length(), MSG_NOSIGNAL);
+			int len = INetSocket::socket_send(ev->get_data(), ev->get_length(), 0);
 			if (len == -1)
 			{
 				if(errno != EWOULDBLOCK)
@@ -432,4 +491,32 @@ void CConnection::clear_send_queue()
         
 		get_module()->get_pool()->push_tcpevent(ev);
 	}
+}
+
+int CConnection::nio_recv(char *buffer, int length, int *ret)
+{
+	int idx = 0;
+
+	while (1)
+    {
+		int count = INetSocket::socket_recv(buffer + idx, length - idx);
+		if (count == 0)
+        {
+			*ret = -1;
+			break;
+		}
+        else if (count == -1)
+		{
+			*ret = 0;
+			break;
+		}
+        else
+        {
+			idx += count;
+			if (idx == length)
+				break;
+		}
+	}
+
+	return idx;
 }

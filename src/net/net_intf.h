@@ -7,6 +7,7 @@ class IPacket
 {
 public:
     virtual ~IPacket(){}
+    virtual int id() const = 0;
     virtual const char* data() const = 0; 
     virtual int length() const = 0;
 };

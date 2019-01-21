@@ -30,8 +30,8 @@ void CSession::on_connection(IConnection* connection)
 		port_ = ntohs(((struct sockaddr_in *)&peer_addr)->sin_port);
 
 		LOG_INF("successfully connected to server[%s:%d]", addr_.c_str(), port_);
-
-        char msg[]="hello, client-bob!";
+        
+        char msg[]="hello~ Bob, I'm Alice from server!";
         connection->send(msg, sizeof(msg));
 	}
 

@@ -28,7 +28,7 @@ void CSession::on_connection(IConnection* connection)
 
 		LOG_INF("successfully connected to server[%s:%d]", addr_.c_str(), port_);
 
-        char msg[]="hello, server-alice!";
+        char msg[]="hello~ Alice, I'm Bob from client!";
         connection->send(msg, sizeof(msg));
 	}
 

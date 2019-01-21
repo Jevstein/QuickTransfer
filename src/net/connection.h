@@ -85,6 +85,9 @@ public:
     void _on_disconnect();
 	void _on_disconnection();
 
+protected:
+	int nio_recv(char *buffer, int length, int *ret);
+
 public:
     ISession* get_session() { return session_; }
 
