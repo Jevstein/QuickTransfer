@@ -12,14 +12,16 @@ DEBUG 		:= YES
 APP			:= libnet
 APP_OUT		:= libnet.so
 ROOT_DIR	:= ../..
-PROJECT_DIR := ..
+PROJ_DIR 	:= .
 OUT_DIR		:= $(ROOT_DIR)/bin
 DEFS_DIR	:= 
 INCS_DIR	:= -I$(ROOT_DIR)/include
 LIBS_DIR	:= $(ROOT_DIR)/lib
 LIBS		:= -ldl -lpthread \
 			   -L$(LIBS_DIR)/ -lhelper
-RAW_SRCS	:= $(wildcard *.cpp) $(wildcard *.c)
+VPATH       := $(PROJ_DIR)/parser
+RAW_SRCS	:= $(wildcard *.cpp) $(wildcard *.c) \
+			   $(wildcard $(PROJ_DIR)/parser/*.cpp) $(wildcard $(PROJ_DIR)/parser/*.c)
 
 # 2.TOOL CHAIN
 CXX				:= g++

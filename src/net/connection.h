@@ -21,6 +21,7 @@ class CPacket: public IPacket
 public:
     CPacket(){}
     virtual ~CPacket(){}
+    virtual int id() const { return 0; }
     virtual const char* data() const { return data_; }
     virtual int length() const { return length_; }
 

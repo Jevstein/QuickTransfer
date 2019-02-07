@@ -4,8 +4,9 @@
 #include "net_module.h"
 #include "net_event.h"
 // #include "packet_parser.h"
-#include "../parser/glo_def.h"
-#include "../parser/protocol_head.h"
+#include "parser/glo_def.h"
+#include "parser/protocol_head.h"
+#include "parser/protocol_codec.h"
 
 CConnection::CConnection()
 : is_client_(false)
@@ -23,15 +24,18 @@ CConnection::~CConnection()
 
 void CConnection::set_parser(IPacketParser* parser)
 {
-	// if (parser == NULL)
-	// {
-	// 	static CPacketParser parse__;
-	// 	packet_parser_ = &parse__;
-	// }
-	// else
-	// {
+	if (parser == NULL)
+	{
+		// static CPacketParser parse__;
+		// packet_parser_ = &parse__;
+
+		static CProtocolCodec parser__;
+		packet_parser = &parser__;
+	}
+	else
+	{
 		packet_parser_ = parser;
-	// }
+	}
 }
 	
 bool CConnection::send(const IPacket *packet)
@@ -219,7 +223,7 @@ void CConnection::on_recv()
 		{
 			int err = 0;
 			std::string error(p_socket_last_error(&err));
-			LOG_ERR("failed to recv! len: %d, err: %s", len, error.c_str());
+			LOG_ERR("failed to recv! len: %d, err: %s", cnt, error.c_str());
 			_on_disconnection();
 		}
 		return;
@@ -228,7 +232,7 @@ void CConnection::on_recv()
 	//decode head
 	protocol_head_t proto_head;
 	protocol_head_codec_t head_codec;
-	head_codec.decode(buf, BUF_SIZE, &proto_head);
+	head_codec.decode((u8*)buf, BUF_SIZE, &proto_head);
 
 	result = 1;
 	cnt = nio_recv(buf + sizeof(protocol_head_t), proto_head.len_, &result);
@@ -238,7 +242,7 @@ void CConnection::on_recv()
 		{
 			int err = 0;
 			std::string error(p_socket_last_error(&err));
-			LOG_ERR("failed to recv! len: %d, err: %s", len, error.c_str());
+			LOG_ERR("failed to recv! len: %d, err: %s", cnt, error.c_str());
 			_on_disconnection();
 		}
 		return;

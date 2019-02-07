@@ -35,13 +35,15 @@ bool protocol_head_codec_t::encode(protocol_head_t* head, u8* buffer, u32 size)
     set_u16(buffer, size, HEAD_LEN_POS, head->len_);
     set_u16(buffer, size, HEAD_MID_POS, head->msg_id_);
     set_u32(buffer, size, HEAD_RESERVE_POS, head->reserve_);
+
+    return true;
 }
 
 u8 protocol_head_codec_t::get_byte(u8* buffer, u32 size, u32 offset)
 {
     assert(buffer != NULL);
     assert(offset <= size);
-    return buffer + offset;
+    return *(u8 *)(buffer + offset);
 }
 
 void protocol_head_codec_t::set_byte(u8* buffer, u32 size, u32 offset, u8 val)

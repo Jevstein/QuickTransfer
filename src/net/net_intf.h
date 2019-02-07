@@ -50,7 +50,7 @@ class IPacketParser
 public:
     virtual ~IPacketParser() {}
     virtual int encode(const IPacket* packet, char* out_data, int& out_size) = 0;
-    virtual int decode(IPacket *packet, int& max_len, const char* data, int size) = 0;
+    virtual IPacket* decode(unsigned short id, const char* data, int size) = 0;
 	virtual int encode(const char* in_data, int in_len, char* out_data, int& out_len) = 0;
 	virtual int decode(const char* in_data, int in_len, char* out_data, int& out_len) = 0;
 };

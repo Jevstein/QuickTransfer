@@ -17,6 +17,7 @@ class CNetPacket: public IPacket
 public:
 	CNetPacket(): data_(NULL), length_(0), offset_(0){}
     virtual ~CNetPacket() { clear(); }
+	virtual int id() const { return 0; }
     virtual const char* data() const { return data_; }
     virtual int length() const { return length_; }
 

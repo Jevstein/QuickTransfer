@@ -50,6 +50,7 @@ struct protocol_head_t
 class protocol_head_codec_t
 {
 public:
+    protocol_head_codec_t(){}
     virtual bool decode(u8* buffer, u32 size, protocol_head_t* head);
     virtual bool encode(protocol_head_t* head, u8* buffer, u32 size);
 
