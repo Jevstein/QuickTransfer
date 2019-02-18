@@ -30,7 +30,7 @@ void CConnection::set_parser(IPacketParser* parser)
 		// packet_parser_ = &parse__;
 
 		static CProtocolCodec parser__;
-		packet_parser = &parser__;
+		packet_parser_ = &parser__;
 	}
 	else
 	{
