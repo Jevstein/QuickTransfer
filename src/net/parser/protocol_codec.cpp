@@ -23,6 +23,7 @@ IPacket* CProtocolCodec::decode(unsigned short id, const char* data, int size)
 
 int CProtocolCodec::encode(const char* in_data, int in_len, char* out_data, int& out_len)
 {
+	
 	return 0; 
 }
 
