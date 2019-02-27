@@ -108,7 +108,7 @@ uint8_t *udp_piece_get( udp_piece_t *udp_piece, int index, int *got_piece_size )
 {
 	int piece_size = 0;
 
-	if (!udp_piece || !got_piece_size < 0)
+	if (!udp_piece || !got_piece_size)
 		return NULL;
 
 	*got_piece_size = 0;

@@ -14,7 +14,7 @@ circular_buffer_t *circular_buffer_init( int capacity )
 	memset( circular_buffer, 0, sizeof(circular_buffer_t) );
 	circular_buffer->capacity_ = capacity;
 
-	circular_buffer->data_ = (char *) malloc( capacity );
+	circular_buffer->data_ = (uint8_t *) malloc( capacity );
 	if ( !circular_buffer->data_ )
 	{
 		free( circular_buffer );

@@ -48,7 +48,7 @@ static void recv_data_loop(void *user_data)
 			}
 			else if(ret == 0)
 			{
-				LOG_INF("recv: %d", ret, len);
+				LOG_INF("recv: ret=%d, len=%d", ret, len);
 			}
 			else
 			{
