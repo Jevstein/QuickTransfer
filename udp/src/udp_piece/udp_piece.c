@@ -1,10 +1,13 @@
 #include <stdlib.h>
 #include <string.h>
+#include "inner.h"
+#include "udp_piece.h"
 
-#include "udp-piece.h"
+// #define UDP_ERR		printf
+// #define UDP_DEBUG	printf
 
-#define UDP_ERR		printf
-#define UDP_DEBUG	printf
+#define UDP_ERR		LOG_ERR
+#define UDP_DEBUG	LOG_DBG
 
 /**
  * @brief 初始化资源
@@ -13,11 +16,8 @@
  */
 udp_piece_t* udp_piece_init( int buf_size )
 {
-	/*  */
-	udp_piece_t *udp_piece = (udp_piece_t *) malloc( sizeof(udp_piece_t) );
-	if ( !udp_piece )
-		return(NULL);
-	memset( udp_piece, 0, sizeof(udp_piece_t) );
+	udp_piece_t *udp_piece = (udp_piece_t *) calloc(1, sizeof(udp_piece_t) );
+	assert(udp_piece);
 
 	udp_piece->circular_buffer = circular_buffer_init( buf_size );
 	if ( !udp_piece->circular_buffer )
@@ -25,7 +25,6 @@ udp_piece_t* udp_piece_init( int buf_size )
 
 	return(udp_piece);
 }
-
 
 /**
  * @brief 释放资源
@@ -42,14 +41,13 @@ void udp_piece_deinit( udp_piece_t *udp_piece )
 		udp_piece->recv_pieces	= 0;
 		udp_piece->total_size	= 0;    /* 总数据大小 */
 		udp_piece->total_pieces = 0;    /* 分片总数量 */
-		udp_piece->left		= 0;    	/* 最后一片的大小 */
+		udp_piece->left			= 0;    /* 最后一片的大小 */
 		udp_piece->piece_size	= 0;    /* 分片大小 */
 		udp_piece->recv_len	= 0;
 		circular_buffer_deinit( udp_piece->circular_buffer );
 		udp_piece->circular_buffer = NULL;
 	}
 }
-
 
 /**
  * @brief 重置，这里不会重新分配资源，只是讲部分参数重置到初始化状态
@@ -63,17 +61,16 @@ void udp_piece_reset( udp_piece_t *udp_piece )
 		if ( udp_piece->recv_buf )
 			free( udp_piece->recv_buf );
 		udp_piece->recv_buf	= NULL;
-		udp_piece->send_ptr		= NULL;
-		udp_piece->recv_pieces	= 0;
-		udp_piece->total_size	= 0;    /* 总数据大小 */
+		udp_piece->send_ptr = NULL;
+		udp_piece->recv_pieces = 0;
+		udp_piece->total_size = 0;    	/* 总数据大小 */
 		udp_piece->total_pieces = 0;    /* 分片总数量 */
-		udp_piece->left		= 0;    /* 最后一片的大小 */
-		udp_piece->piece_size	= 0;    /* 分片大小 */
+		udp_piece->left = 0;    		/* 最后一片的大小 */
+		udp_piece->piece_size = 0;    	/* 分片大小 */
 		udp_piece->recv_len	= 0;
 		circular_buffer_reset( udp_piece->circular_buffer );
 	}
 }
-
 
 /**
  * @brief 根据长度进行切割，返回切割后的分片数量
@@ -82,20 +79,19 @@ void udp_piece_reset( udp_piece_t *udp_piece )
  * @param size      要分片数据的长度
  * @return 返回分片的数量
  */
-int udp_piece_cut( udp_piece_t *udp_piece, void *buf, int size )
+int udp_piece_cut( udp_piece_t *udp_piece, const void *buf, int size )
 {
 	if (!udp_piece || size < 0)
 		return 0;
 
-	udp_piece->send_ptr = buf;
+	udp_piece->send_ptr = (uint8_t*)buf;
 	udp_piece->total_size = size;
 	udp_piece->left = size % PIECE_FIX_SIZE;	// 最后一个分片数据的大小
 	udp_piece->total_pieces = 
-		(udp_piece->left > 0) ? (size / PIECE_FIX_SIZE + 1) :(size / PIECE_FIX_SIZE);
+		(udp_piece->left > 0) ? (size / PIECE_FIX_SIZE + 1) : (size / PIECE_FIX_SIZE);
 
 	return udp_piece->total_pieces;
 }
-
 
 /**
  * @brief 根据分片编号获取切片指针及分片数据大小
@@ -150,7 +146,6 @@ uint8_t *udp_piece_get( udp_piece_t *udp_piece, int index, int *got_piece_size )
 	return udp_piece->piece_buf;
 }
 
-
 /**
  * @brief 重组分片
  * @param udp_piece 句柄
@@ -204,8 +199,8 @@ int udp_piece_merge( udp_piece_t *udp_piece, void *buf, int size )
 					return(-1);
 				}
 			}
-			UDP_DEBUG( "buf size: %d, piece_data_len: %d, p_index: %d, recv_pieces: %d, total_size: %d, total_pieces: %d\n",
-				   temp_size, data_len, p_index, udp_piece->recv_pieces, udp_piece->total_size, udp_piece->total_pieces );
+			LOG_INF("merge piece[%d]: buf size=%d, piece_data_len=%d, p_index=%d, recv_pieces=%d, total_size=%d, total_pieces=%d",
+				   p_index, temp_size, data_len, p_index, udp_piece->recv_pieces, udp_piece->total_size, udp_piece->total_pieces );
 			temp_total_size = (piece_buf[HEAD_POS_TOTAL_SIZE] << 8) + (piece_buf[HEAD_POS_TOTAL_SIZE+1]);
 			temp_total_pieces = (piece_buf[HEAD_POS_TOTAL_PIECES] << 8) + (piece_buf[HEAD_POS_TOTAL_PIECES+1]);
 			udp_piece->recv_pieces++;
@@ -283,7 +278,7 @@ int udp_piece_merge_ex( udp_piece_t *udp_piece, void *buf, int size )
 	}
 
 	/*
-	 * 从新收到的数据检测是否包含 片头
+	 * 从新收到的数据检测是否包含片头
 	 * 检测头部
 	 */
 	while ( circular_buffer_size( udp_piece->circular_buffer ) >= 2 )
@@ -337,8 +332,8 @@ int udp_piece_merge_ex( udp_piece_t *udp_piece, void *buf, int size )
 					return(-1);
 				}
 			}
-			UDP_DEBUG( "buf size: %d, piece_data_len: %d, p_index: %d, recv_pieces: %d, total_size: %d, total_pieces: %d",
-				   circular_buffer_size( udp_piece->circular_buffer ), data_len, p_index, udp_piece->recv_pieces, udp_piece->total_size, udp_piece->total_pieces );
+			LOG_INF("merge piece[%d]: buf size=%d, piece_data_len=%d, recv_pieces=%d, total_size=%d, total_pieces=%d",
+				   p_index, circular_buffer_size(udp_piece->circular_buffer), data_len, udp_piece->recv_pieces, udp_piece->total_size, udp_piece->total_pieces);
 
 			/* 计算当前分片所属分片组数据的总大小 */
 			circular_buffer_get( udp_piece->circular_buffer, HEAD_POS_TOTAL_SIZE, &value0 );        /* 通过索引获取当前值 */
@@ -381,8 +376,7 @@ int udp_piece_merge_ex( udp_piece_t *udp_piece, void *buf, int size )
 				return(-1);
 			}
 
-
-			UDP_DEBUG( ", remain size = %d\n", circular_buffer_size( udp_piece->circular_buffer ) );
+			UDP_DEBUG("      , remain size=%d", circular_buffer_size( udp_piece->circular_buffer ) );
 
 			udp_piece->recv_len += data_len;
 			if ( udp_piece->recv_pieces == udp_piece->total_pieces )
@@ -411,5 +405,3 @@ int udp_piece_merge_ex( udp_piece_t *udp_piece, void *buf, int size )
 	
 	return(get_all_pieces);
 }
-
-

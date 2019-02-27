@@ -1,11 +1,11 @@
 
 #ifndef _CLIENT_H_
 #define _CLIENT_H_
-#include "../udp_piece/dn_socket.h"
+#include "../udp_piece/udp_socket.h"
 
 typedef struct _jvt_client
 {
-    dn_socket_t dn_socket_;
+    udp_socket_t udp_socket_;
 } jvt_client_t;
 
 

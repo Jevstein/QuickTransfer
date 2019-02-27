@@ -1,11 +1,11 @@
 
 #ifndef _SERVER_H_
 #define _SERVER_H_
-#include "../udp_piece/dn_socket.h"
+#include "../udp_piece/udp_socket.h"
 
 typedef struct _jvt_server
 {
-    dn_socket_t dn_socket_;
+    udp_socket_t udp_socket_;
 } jvt_server_t;
 
 

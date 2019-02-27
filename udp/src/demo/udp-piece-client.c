@@ -7,10 +7,10 @@
 #include <stdio.h>  
 #include <errno.h>  
 #include <string.h>  
-#include "../udp_piece/udp-piece.h"
+#include "../udp_piece/udp_piece.h"
 
 /*
-* 编译：gcc -o udp-piece-client udp-piece-client.c  udp-piece.c circular_buffer.c
+* 编译：gcc -o udp_piece-client udp_piece-client.c  udp_piece.c circular_buffer.c
 */
 
 #define MYPORT 8887  
@@ -87,8 +87,6 @@ void echo_client(int sock)
     }  
     
     close(sock);  
-    
-    
 }  
 
 int main(void)  
@@ -103,4 +101,4 @@ int main(void)
 }  
 
 //compile:
-// $ gcc -o ../../../bin/udp-piece-client udp-piece-client.c  udp-piece.c circular_buffer.c
+// $ gcc -o ../../../bin/udp_piece-client udp_piece-client.c  udp_piece.c circular_buffer.c

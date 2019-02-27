@@ -44,6 +44,9 @@ using namespace std;
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 
+#include "../../inc/protocol/protocol.h"
+#include "../../inc/protocol/packet.h"
+
 // singleton
 #define SINGLETON(type) \
 static inline type* GetInstancePtr() \

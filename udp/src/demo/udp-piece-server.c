@@ -6,12 +6,12 @@
 #include <sys/socket.h>  
 #include <netinet/in.h>  
 #include <string.h>  
-#include "../udp_piece/udp-piece.h"
+#include "../udp_piece/udp_piece.h"
 
 #define MYPORT 8887  
 
 /*
-* 编译：gcc -o udp-piece-server_ex udp-piece-server.c circular_buffer.c udp-piece.c
+* 编译：gcc -o udp_piece-server_ex udp_piece-server.c circular_buffer.c udp_piece.c
 */
 #define ERR_EXIT(m) \
     do { \
@@ -93,4 +93,4 @@ int main(void)
 }  
 
 //compile:
-// $ gcc -o ../../../bin/udp-piece-server_ex udp-piece-server.c circular_buffer.c udp-piece.c
+// $ gcc -o ../../../bin/udp_piece-server_ex udp_piece-server.c circular_buffer.c udp_piece.c

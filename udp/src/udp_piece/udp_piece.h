@@ -11,13 +11,14 @@ extern "C" {
 
 #include "circular_buffer.h"
 
+// 包体总大小：544Byte, 小于MSS=548(MTU: 576 = MSS + 8 + 20)
 #define HEAD_POS_SYNC_WORD		0	// 同步字
 #define HEAD_POS_TOTAL_SIZE 	2	// 所有分片数据的大小（不包括HEAD） //total data length of all pieces
 #define HEAD_POS_TOTAL_PIECES 	4 	// 所有分片的数量
 #define HEAD_POS_P_INDEX 		6 	// 分片序号，从0开始
 #define HEAD_POS_P_LENGTH 		8 	// 当前分片数据的大小
 #define HEAD_SIZE 				12	// 头部大小
-#define PIECE_FIX_SIZE 			512 	//每个分片数据最大字节数
+#define PIECE_FIX_SIZE 			512 // 每个分片数据最大字节数
 
 
 typedef struct udp_piece
@@ -61,7 +62,7 @@ void udp_piece_reset(udp_piece_t *udp_piece);
  * @param size      要分片数据的长度
  * @return 返回分片的数量
  */
-int udp_piece_cut(udp_piece_t *udp_piece, void *buf, int size);
+int udp_piece_cut(udp_piece_t *udp_piece, const void *buf, int size);
 
 /**
  * @brief 根据分片编号获取切片指针及分片数据大小
