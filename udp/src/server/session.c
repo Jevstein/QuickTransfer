@@ -23,7 +23,7 @@
 // 	}
 // }
 
-int jvt_session_init(jvt_session_t *session, int port)
+int jvt_session_init(jvt_session_t *session)
 {
 	assert(session);
 

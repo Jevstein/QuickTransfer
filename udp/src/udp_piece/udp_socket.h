@@ -13,6 +13,16 @@ enum RECV_TYPE
     RECV_TYPE_UNKNOWN,
 };
 
+typedef struct _udp_socket_result udp_socket_result_t;
+typedef struct _udp_socket_callback udp_socket_callback_t;
+typedef struct _udp_socketinfo udp_socketinfo_t;
+typedef struct _udp_socket udp_socket_t;
+
+typedef void (* recv_data_func_t)(void* session, udp_socket_result_t* result);
+typedef void (* create_session_func_t)(udp_socket_t* udp_socket);
+typedef void (* destroy_session_func_t)();
+typedef udp_socket_t* (* find_udp_socket_func_t)(udp_socket_t *udp_socket, char* ip, int port);// typedef udp_socket_t* (* find_socket_func_t)(int sockid);
+
 typedef struct _udp_socket_result
 {
     int type;   //类型: 见RECV_TYPE
@@ -20,67 +30,31 @@ typedef struct _udp_socket_result
     int len;    //长度
 } udp_socket_result_t;
 
-
-typedef void (* recv_data_func_t)(void* user_data, udp_socket_result_t* result);
-
-typedef struct _udp_socketinfo
+typedef struct _udp_socket_callback
 {
-    // int socket;                             // 定义socket句柄
-    int sockfd;
-    uint32_t ip;
-    uint16_t port;
-    struct sockaddr_in addr;
-} udp_socketinfo_t;
+    void *session;
 
-/**
- * 封装socket
- */
+    find_udp_socket_func_t find_udp_socket_func;
+    create_session_func_t create_session_func;
+    destroy_session_func_t destroy_session_func;
+    recv_data_func_t recv_data_func;
+} udp_socket_callback_t;
+
 typedef struct _udp_socket
 {
-    recv_data_func_t recv_func_callback;    // 接收回调
-    void* user_data;                        // 接收回调上下文
-
-    udp_socketinfo_t srv_info;              //服务端socket信息
-    udp_socketinfo_t clt_infos[5];          //客户端socket信息
-
-    int exit_thread;                        // 初始化为0, 等于1时则退出线程
-
-    int piece_capacity;                     //分配容量
+    char ip[64];                    //IP地址
+    uint16_t port;                  //端口
+    int max_piece_size;             //分片大小
+    udp_socket_callback_t callback; //外部回调
+    udp_socketinfo_t *info;         //socket信息[私有成员]
 } udp_socket_t;
 
-/**
- * @brief 初始化socket
- * @param udp_socket
- * @return
- */
-int udp_socket_init(udp_socket_t *udp_socket);
-
-/**
- * @brief 退出socket
- * @param udp_socket
- * @return
- */
+// udp socket
+int udp_socket_init(udp_socket_t *udp_socket, const char *ip, int port, int piece_size);
 void udp_socket_uninit(udp_socket_t *udp_socket);
-
-/**
- * @brief 
- * @param udp_socket
- * @return
- */
-int udp_socket_loop(udp_socket_t *udp_socket);
-
-/** 绑定
- * @brief 
- * @param udp_socket
- * @return
- */
+// void udp_socket_destroy(udp_socket_t *udp_socket);
 int udp_socket_bind(udp_socket_t *udp_socket);
-
-/**
- * @brief 发送数据
- * @param udp_socket
- * @return
- */
 int udp_socket_send(udp_socket_t *udp_socket, const void* buf, int size);
+int udp_socket_recv(udp_socket_t *udp_socket);
 
 #endif // DN_SOCKET_H

@@ -25,16 +25,16 @@ char test_str[] = {"6c7166407562756e74753a2f6d6e742f686766732f776f726b2420636420
 
 int download_file_req(jvt_client_t *S, const char *filename)
 {
-	LOG_INF("request download file: '%s'", filename);
+	// LOG_INF("request download file: '%s'", filename);
 
-	pt_downloadfile_req req;
-	req.opcode = downloadfile_req;
-	strcpy(req.filename, filename);
-	if (udp_socket_send(&S->udp_socket_, &req, sizeof(pt_downloadfile_req)) != 0)
-	{
-		LOG_INF("failed to send req: filename='%s'", filename);
-		return -1;
-	}
+	// pt_downloadfile_req req;
+	// req.opcode = downloadfile_req;
+	// strcpy(req.filename, filename);
+	// if (udp_socket_send(&S->udp_socket_, &req, sizeof(pt_downloadfile_req)) != 0)
+	// {
+	// 	LOG_INF("failed to send req: filename='%s'", filename);
+	// 	return -1;
+	// }
 
 	return 0;
 }
@@ -43,14 +43,14 @@ int jvt_client_init(jvt_client_t *S, int port)
 {
 	assert(S);
 
-	S->udp_socket_.srv_info.port = port;
-	S->udp_socket_.piece_capacity = JVT_PIECE_CAPACITY;
-	int ret = udp_socket_init(&S->udp_socket_);
-	if (ret < 0)
-	{
-		LOG_ERR("failed to init socket! ret=%d, port=%d", ret, port);
-		return -1;
-	}
+	// S->udp_socket_.srv_info.port = port;
+	// S->udp_socket_.piece_capacity = JVT_PIECE_CAPACITY;
+	// int ret = udp_socket_init(&S->udp_socket_);
+	// if (ret < 0)
+	// {
+	// 	LOG_ERR("failed to init socket! ret=%d, port=%d", ret, port);
+	// 	return -1;
+	// }
 
 	LOG_INF("jvt_client_init success! port=%d", port);
 	return 0;

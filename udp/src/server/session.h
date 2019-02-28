@@ -11,7 +11,7 @@ typedef struct _jvt_session
 } jvt_session_t;
 
 
-int jvt_session_init(jvt_session_t *S, int port);
+int jvt_session_init(jvt_session_t *S);
 void jvt_session_uninit(jvt_session_t *S);
 
 #endif //_SERVER_H_
