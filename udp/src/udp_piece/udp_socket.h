@@ -1,5 +1,5 @@
-﻿#ifndef DN_SOCKET_H
-#define DN_SOCKET_H
+﻿#ifndef UDP_SOCKET_H
+#define UDP_SOCKET_H
 #include <stdint.h>
 #include <string.h>
 #include <netinet/in.h>
@@ -21,7 +21,9 @@ typedef struct _udp_socket udp_socket_t;
 typedef void (* recv_data_func_t)(void* session, udp_socket_result_t* result);
 typedef void (* create_session_func_t)(udp_socket_t* udp_socket);
 typedef void (* destroy_session_func_t)();
-typedef udp_socket_t* (* find_udp_socket_func_t)(udp_socket_t *udp_socket, char* ip, int port);// typedef udp_socket_t* (* find_socket_func_t)(int sockid);
+typedef void (* reset_udp_socket_func_t)(udp_socket_t *udp_socket, void *user_data);
+typedef udp_socket_t* (* find_udp_socket_func_t)(udp_socket_t *udp_socket, char* ip, int port
+                    , reset_udp_socket_func_t func, void *user_data);// typedef udp_socket_t* (* find_socket_func_t)(int sockid);
 
 typedef struct _udp_socket_result
 {
@@ -57,4 +59,4 @@ int udp_socket_bind(udp_socket_t *udp_socket);
 int udp_socket_send(udp_socket_t *udp_socket, const void* buf, int size);
 int udp_socket_recv(udp_socket_t *udp_socket);
 
-#endif // DN_SOCKET_H
+#endif // UDP_SOCKET_H

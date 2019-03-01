@@ -1,29 +1,8 @@
 #include "prefixhead.h"
 #include "server.h"
 
-// void _on_recv_data(void* user_data, udp_socket_result_t* result)
-// {
-// 	assert(result);
-// 	jvt_server_t* S = (jvt_server_t *)user_data;
-
-// 	if (result->type == RECV_TYPE_SUCCESS)
-// 	{
-// 		//TODO: parser
-// 		pt_downloadfile_req *req = (pt_downloadfile_req *)result->data;
-//         LOG_INF("recv[%d]: data=%p, opcode=%d, filename='%s'"
-// 		, result->len, result->data, req->opcode, req->filename);
-// 	}
-// 	else if (result->type == RECV_TYPE_INCOMPLETE)
-// 	{
-//         // LOG_INF("recv: type=%d", result->type, result->data, result->len);
-// 	}
-// 	else
-// 	{
-//         LOG_ERR("recv: error=%d, data=%p, len=%d", result->type, result->data, result->len);
-// 	}
-// }
-
-udp_socket_t* on_find_udp_socket(udp_socket_t *udp_socket, char* ip, int port)
+udp_socket_t* _on_find_udp_socket(udp_socket_t *udp_socket, char* ip, int port
+								, reset_udp_socket_func_t func, void *user_data)
 {
 	jvt_server_t *S = (jvt_server_t *)udp_socket->callback.session;
 
@@ -57,12 +36,21 @@ udp_socket_t* on_find_udp_socket(udp_socket_t *udp_socket, char* ip, int port)
 	// 2.2.新建新的会话
 	S->sessions_[i] = (jvt_session_t *)calloc(1, sizeof(jvt_session_t));
 	assert(S->sessions_[i]);
+	jvt_session_init(S->sessions_[i]);
 
-	//TODO: 创建udp_socket_t*
+	udp_socket_callback_t* cbk = &S->sessions_[i]->udp_socket_.callback;
+	if (cbk)
+	{
+		cbk->session = S->sessions_[i];
+		cbk->find_udp_socket_func = NULL;
+		cbk->create_session_func = NULL;
+		cbk->destroy_session_func = NULL;
+		cbk->recv_data_func = jvt_session_on_recv_data;
+	}
+	func(&S->sessions_[i]->udp_socket_, user_data);
 
 	return &S->sessions_[i]->udp_socket_;
 }
-
 
 int jvt_server_init(jvt_server_t *S, int port)
 {
@@ -77,7 +65,7 @@ int jvt_server_init(jvt_server_t *S, int port)
 
 	// 2.初始化S->udp_socket_
 	S->udp_socket_.callback.session = S;
-    S->udp_socket_.callback.find_udp_socket_func = on_find_udp_socket;
+    S->udp_socket_.callback.find_udp_socket_func = _on_find_udp_socket;
     S->udp_socket_.callback.create_session_func = NULL;
     S->udp_socket_.callback.destroy_session_func = NULL;
     S->udp_socket_.callback.recv_data_func = NULL;
@@ -96,7 +84,7 @@ int jvt_server_init(jvt_server_t *S, int port)
 		return ret;
 	}
 
-	LOG_INF("bind: port=%d", port);
+	// LOG_INF("bind: port=%d", port);
 	return 0;
 }
 
@@ -104,7 +92,9 @@ void jvt_server_run(jvt_server_t *S)
 {
 	assert(S);
 
-	LOG_INF("run ...");
+	LOG_INF("server start success..., listen port: %d", S->udp_socket_.port);
+	
+	//TODO: 建立反应堆
 	while (1) 
 	{
 		udp_socket_recv(&S->udp_socket_);
@@ -122,5 +112,5 @@ void jvt_server_uninit(jvt_server_t *S)
 			free(S->sessions_[i]);
 	}
 
-	LOG_INF("end ...");
+	LOG_ERR("TODO: jvt_server_uninit...");
 }

@@ -20,5 +20,9 @@
 #define LOG_INF(fmt,...) { time_t now = time(NULL); printf("[%.24s][inf][udp] "fmt"\n", ctime(&now), ##__VA_ARGS__); }
 #define LOG_DBG(fmt,...) { time_t now = time(NULL); printf("[%.24s][dbg][udp] "fmt"\n", ctime(&now), ##__VA_ARGS__); }
 
+//
+#define UDP_ERR		LOG_ERR
+#define UDP_DEBUG	//LOG_DBG
+
 
 #endif//_INNER_H_

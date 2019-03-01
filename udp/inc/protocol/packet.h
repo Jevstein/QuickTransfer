@@ -10,10 +10,10 @@
 #define _PACKET_H_
 
 #define FILE_PACKET (1024 * 4)
-#define NET_PACKET(p) 					\
-	struct p : public pt_packet_head
+#define NET_PACKET(pt) 					\
+	struct pt : public pt_packet_head_t
 
-struct pt_packet_head
+struct pt_packet_head_t
 {
 	short opcode;
 };
@@ -25,8 +25,9 @@ NET_PACKET(pt_downloadfile_req)
 
 NET_PACKET(pt_downloadfile_ack)
 {
+	char ret;	//返回值: 0=成功，-1=不存在
 	int fileid;
-	int total_size;
+	int filesize;
 	char filename[256];
 };
 
@@ -40,8 +41,8 @@ NET_PACKET(pt_transferfile_noti)
 
 NET_PACKET(pt_transferfile_ack)
 {
+	char ret;	//返回值: 0=成功，-1=失败
 	int fileid;
-	char ret;
 	int index;
 };
 

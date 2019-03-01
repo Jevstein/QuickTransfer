@@ -11,7 +11,7 @@
     r.type = t;                             \
     r.data = d;                             \
     r.len = l;                              \
-    s->recv_data_func(s->user_data, &r);    \
+    s->recv_data_func(s->session, &r);      \
 }
 
 typedef struct _udp_socketinfo
@@ -21,6 +21,39 @@ typedef struct _udp_socketinfo
     struct sockaddr_in addr;//地址
     udp_piece_t *udp_piece; //UDP分片
 } udp_socketinfo_t;
+
+typedef struct _reset_param
+{
+    udp_socket_t *udp_socket;
+    struct sockaddr_in *addr;
+} reset_param_t;
+
+void _reset_udp_socket(udp_socket_t *udp_socket, void *user_data)
+{
+    assert(udp_socket || user_data);
+
+    reset_param_t* param = (reset_param_t *)user_data;
+
+    inet_ntop(AF_INET, &param->addr->sin_addr, udp_socket->ip, sizeof(udp_socket->ip));
+    // UDP_DEBUG("sockfd=%d, client [%s:%d]", udp_socket->info->sockfd, ip, ntohs(addr.sin_port));
+    udp_socket->port = ntohs(param->addr->sin_port);
+    udp_socket->max_piece_size = param->udp_socket->max_piece_size;
+
+    // udp_socket->callback = ;//udp_socket_callback_t
+
+    udp_socket->info = (udp_socketinfo_t *)calloc(1, sizeof(udp_socketinfo_t));
+    assert(udp_socket->info);
+    if (udp_socket->info)
+    {
+        udp_socket->info->sockid = -1;
+        udp_socket->info->sockfd = param->udp_socket->info->sockfd;
+
+        udp_socket->info->addr = *param->addr;
+
+        udp_socket->info->udp_piece = udp_piece_init(udp_socket->max_piece_size);
+        assert(udp_socket->info->udp_piece);
+    }
+}
 
 int udp_socket_init(udp_socket_t *udp_socket, const char *ip, int port, int piece_size)
 {
@@ -103,13 +136,13 @@ int udp_socket_send(udp_socket_t *udp_socket, const void *buf, int len)
 
 	int send_len = 0;
 	int	pieces = udp_piece_cut(udp_piece, buf, len);
-	LOG_INF("send pieces: pieces=%d, len=%d", pieces, len);
+	UDP_DEBUG("send pieces: pieces=%d, len=%d", pieces, len);
 
 	for(int i = 0; i < pieces; i++)
 	{
         int size;
         uint8_t *buf = udp_piece_get(udp_piece, pieces - i - 1, &size);
-        LOG_INF("send piece[%d]: buf=%p, len=%d", i + 1, buf, size);
+        UDP_DEBUG("send piece[%d]: buf=%p, len=%d", i + 1, buf, size);
         send_len = sendto(info->sockfd, buf, size, 0, (struct sockaddr *)&info->addr, sizeof(info->addr));
         if(send_len != size)
         {
@@ -117,6 +150,8 @@ int udp_socket_send(udp_socket_t *udp_socket, const void *buf, int len)
             return -1;
         }
 	}
+
+    udp_piece_reset(udp_piece);
 
     return 0;
 }
@@ -128,11 +163,12 @@ int udp_socket_recv(udp_socket_t *udp_socket)
     struct sockaddr_in addr;
     socklen_t addr_len = sizeof(struct sockaddr_in);
     char ip[64] = {0};
+    int port = 0;
 
     unsigned char buf[MAX_MSG_SIZE];
     int len = 0;
 
-    while(1)
+    while (1)
     {
         // 1.接收数据
         len = recvfrom(udp_socket->info->sockfd, buf, sizeof(buf), 0, (struct sockaddr *)&addr, &addr_len);
@@ -149,34 +185,40 @@ int udp_socket_recv(udp_socket_t *udp_socket)
         }
 
         inet_ntop(AF_INET, &addr.sin_addr, ip, sizeof(ip));
-        LOG_INF("sockfd=%d, client [%s:%d]", udp_socket->info->sockfd, ip, ntohs(addr.sin_port));
+        UDP_DEBUG("sockfd=%d, client [%s:%d]", udp_socket->info->sockfd, ip, ntohs(addr.sin_port));
 
-        // 2.找到客户连接：未找到则新建
-        udp_socket_t* udp_socket_client = udp_socket->callback.find_udp_socket_func(udp_socket, ip, ntohs(addr.sin_port));
+        // 2.找到客户连接（未找到则新建）
+        reset_param_t param;
+        param.udp_socket = udp_socket;
+        param.addr = &addr;
+        udp_socket_t* udp_socket_client = udp_socket->callback.find_udp_socket_func(udp_socket, ip, ntohs(addr.sin_port), _reset_udp_socket, &param);
         assert(udp_socket_client);
 
         udp_piece_t *udp_piece = udp_socket_client->info->udp_piece;
         assert(udp_piece);
 
+        udp_socket_callback_t *cbk = &udp_socket_client->callback;
+        assert(cbk);
+
         // 3.重组分片
         int ret = udp_piece_merge_ex(udp_piece, buf, len);
         if (ret == 0) {//continue
-            LOG_INF("recv: ret=%d, len=%d", ret, len);
-            // RECV_CALLBACK(udp_socket, RECV_TYPE_INCOMPLETE, recvbuf, len);
+            // UDP_DEBUG("recv: ret=%d, len=%d", ret, len);
+            RECV_CALLBACK(cbk, RECV_TYPE_INCOMPLETE, buf, len);
             continue;
         } else if (ret == 1) {//finish
-            LOG_INF("received：msg='%s', len=%d", udp_piece->recv_buf, udp_piece->recv_len);
-            // RECV_CALLBACK(udp_socket, RECV_TYPE_SUCCESS, udp_piece->recv_buf, udp_piece->recv_len);
+            // UDP_DEBUG("received：msg='%s', len=%d", udp_piece->recv_buf, udp_piece->recv_len);
+            RECV_CALLBACK(cbk, RECV_TYPE_SUCCESS, udp_piece->recv_buf, udp_piece->recv_len);
             udp_piece_reset(udp_piece);
             break;
         } else if(ret == -1) {//error
             LOG_ERR("exception of udp piece!");
-            // RECV_CALLBACK(udp_socket, RECV_TYPE_EXCEPTION, recvbuf, len);
+            RECV_CALLBACK(cbk, RECV_TYPE_EXCEPTION, buf, len);
             udp_piece_reset(udp_piece);
             return 1;
         } else {//unknown
             LOG_ERR("unknown exception of udp piece!");
-            // RECV_CALLBACK(udp_socket, RECV_TYPE_UNKNOWN, recvbuf, len);
+            RECV_CALLBACK(cbk, RECV_TYPE_UNKNOWN, buf, len);
             udp_piece_reset(udp_piece);
             return 2;
         }

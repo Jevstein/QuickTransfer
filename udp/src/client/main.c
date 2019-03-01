@@ -148,7 +148,7 @@ int main(int argc, const char * argv[])
     
 	// client
 	jvt_client_t C;
-	if (jvt_client_init(&C, SERVER_PORT) != 0)
+	if (jvt_client_init(&C, SERVER_IP, SERVER_PORT) != 0)
 	{
 		LOG_ERR("failed to initailize client!");
     	return 0;

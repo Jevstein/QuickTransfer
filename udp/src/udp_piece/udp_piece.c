@@ -6,9 +6,6 @@
 // #define UDP_ERR		printf
 // #define UDP_DEBUG	printf
 
-#define UDP_ERR		LOG_ERR
-#define UDP_DEBUG	LOG_DBG
-
 /**
  * @brief 初始化资源
  * @param buf_size 设置缓冲区数据的最大长度
@@ -199,7 +196,7 @@ int udp_piece_merge( udp_piece_t *udp_piece, void *buf, int size )
 					return(-1);
 				}
 			}
-			LOG_INF("merge piece[%d]: buf size=%d, piece_data_len=%d, p_index=%d, recv_pieces=%d, total_size=%d, total_pieces=%d",
+			UDP_DEBUG("merge piece[%d]: buf size=%d, piece_data_len=%d, p_index=%d, recv_pieces=%d, total_size=%d, total_pieces=%d",
 				   p_index, temp_size, data_len, p_index, udp_piece->recv_pieces, udp_piece->total_size, udp_piece->total_pieces );
 			temp_total_size = (piece_buf[HEAD_POS_TOTAL_SIZE] << 8) + (piece_buf[HEAD_POS_TOTAL_SIZE+1]);
 			temp_total_pieces = (piece_buf[HEAD_POS_TOTAL_PIECES] << 8) + (piece_buf[HEAD_POS_TOTAL_PIECES+1]);
@@ -332,7 +329,7 @@ int udp_piece_merge_ex( udp_piece_t *udp_piece, void *buf, int size )
 					return(-1);
 				}
 			}
-			LOG_INF("merge piece[%d]: buf size=%d, piece_data_len=%d, recv_pieces=%d, total_size=%d, total_pieces=%d",
+			UDP_DEBUG("merge piece[%d]: buf size=%d, piece_data_len=%d, recv_pieces=%d, total_size=%d, total_pieces=%d",
 				   p_index, circular_buffer_size(udp_piece->circular_buffer), data_len, udp_piece->recv_pieces, udp_piece->total_size, udp_piece->total_pieces);
 
 			/* 计算当前分片所属分片组数据的总大小 */
