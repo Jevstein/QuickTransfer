@@ -18,7 +18,7 @@ DEFS_DIR	:=
 INCS_DIR	:= -I$(ROOT_DIR)/inc
 LIBS_DIR	:= $(ROOT_DIR)/lib
 LIBS		:= -ldl -lpthread \
-			   -L$(LIBS_DIR)/ -lpiece
+			   -L$(LIBS_DIR)/ -ltransfer
 # VPATH       := $(PROJ_DIR)/common
 RAW_SRCS	:= $(wildcard *.c) $(wildcard *.cpp)
 			   #$(wildcard $(PROJ_DIR)/common/*.cpp) $(wildcard $(PROJ_DIR)/common/*.c)

@@ -6,7 +6,7 @@
 #include <sys/socket.h>  
 #include <netinet/in.h>  
 #include <string.h>  
-#include "../udp_piece/udp_piece.h"
+#include "../transfer/udp_piece.h"
 
 #define MYPORT 8887  
 

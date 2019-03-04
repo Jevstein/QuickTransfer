@@ -46,6 +46,7 @@ using namespace std;
 
 #include "../../inc/protocol/protocol.h"
 #include "../../inc/protocol/packet.h"
+#include "../transfer/transfer.h"
 
 // singleton
 #define SINGLETON(type) \

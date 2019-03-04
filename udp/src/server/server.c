@@ -21,8 +21,13 @@ udp_socket_t* _on_find_udp_socket(udp_socket_t *udp_socket, char* ip, int port
 		}
 		
 		udp_socket_new = &S->sessions_[i]->udp_socket_;
+		// LOG_DBG("find socket[%p][%d]...: [%s:%d] [%s:%d]", S->sessions_[i], i
+		// 	, udp_socket_new->ip, udp_socket_new->port, ip, port);
 		if ((strcmp(udp_socket_new->ip, ip) == 0) && (udp_socket_new->port == port))
+		{
+			// LOG_DBG("find socket success: [%s:%d]", ip, port);
 			return udp_socket_new;
+		}
 	}
 
 	// 2.未找到
@@ -34,22 +39,24 @@ udp_socket_t* _on_find_udp_socket(udp_socket_t *udp_socket, char* ip, int port
 	}
 
 	// 2.2.新建新的会话
-	S->sessions_[i] = (jvt_session_t *)calloc(1, sizeof(jvt_session_t));
-	assert(S->sessions_[i]);
-	jvt_session_init(S->sessions_[i]);
+	S->sessions_[j] = (jvt_session_t *)calloc(1, sizeof(jvt_session_t));
+	assert(S->sessions_[j]);
+	jvt_session_init(S->sessions_[j]);
 
-	udp_socket_callback_t* cbk = &S->sessions_[i]->udp_socket_.callback;
+	udp_socket_callback_t* cbk = &S->sessions_[j]->udp_socket_.callback;
 	if (cbk)
 	{
-		cbk->session = S->sessions_[i];
+		cbk->session = S->sessions_[j];
 		cbk->find_udp_socket_func = NULL;
 		cbk->create_session_func = NULL;
 		cbk->destroy_session_func = NULL;
 		cbk->recv_data_func = jvt_session_on_recv_data;
 	}
-	func(&S->sessions_[i]->udp_socket_, user_data);
+	func(&S->sessions_[j]->udp_socket_, user_data);
 
-	return &S->sessions_[i]->udp_socket_;
+	// LOG_DBG("not find socket: [%p][%d] [%s:%d]", S->sessions_[j], j, S->sessions_[j]->udp_socket_.ip, S->sessions_[j]->udp_socket_.port);
+
+	return &S->sessions_[j]->udp_socket_;
 }
 
 int jvt_server_init(jvt_server_t *S, int port)

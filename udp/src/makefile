@@ -9,7 +9,7 @@
 
 # 1.config
 ROOR_DIR = ..
-SRC_DIRS = udp_piece demo server client
+SRC_DIRS = transfer demo server client
 INSTALL_DIR = $(ROOR_DIR)
 
 # 2.OUTPUT

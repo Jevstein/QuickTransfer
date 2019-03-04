@@ -1,7 +1,6 @@
 
 #ifndef _CLIENT_H_
 #define _CLIENT_H_
-#include "../udp_piece/udp_socket.h"
 #include "session.h"
 
 typedef struct _jvt_client

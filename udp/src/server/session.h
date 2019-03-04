@@ -1,12 +1,11 @@
 
 #ifndef _SESSION_H_
 #define _SESSION_H_
-#include "../udp_piece/udp_socket.h"
 #include "file.h"
 
 typedef struct _jvt_session
 {
-    jvt_file_t files_[JVT_MAX_FILES];
+    jvt_file_t files_[JVT_MAX_FILES];//应该考虑红黑树
     udp_socket_t udp_socket_;
 } jvt_session_t;
 

@@ -7,7 +7,7 @@
 #include <stdio.h>  
 #include <errno.h>  
 #include <string.h>  
-#include "../udp_piece/udp_piece.h"
+#include "../transfer/udp_piece.h"
 
 /*
 * 编译：gcc -o udp_piece-client udp_piece-client.c  udp_piece.c circular_buffer.c

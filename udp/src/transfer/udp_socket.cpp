@@ -35,9 +35,9 @@ void _reset_udp_socket(udp_socket_t *udp_socket, void *user_data)
     reset_param_t* param = (reset_param_t *)user_data;
 
     inet_ntop(AF_INET, &param->addr->sin_addr, udp_socket->ip, sizeof(udp_socket->ip));
-    // UDP_DEBUG("sockfd=%d, client [%s:%d]", udp_socket->info->sockfd, ip, ntohs(addr.sin_port));
     udp_socket->port = ntohs(param->addr->sin_port);
     udp_socket->max_piece_size = param->udp_socket->max_piece_size;
+    // UDP_DBG("reset: client [%s:%d]",  udp_socket->ip, udp_socket->port);
 
     // udp_socket->callback = ;//udp_socket_callback_t
 

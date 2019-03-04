@@ -19,7 +19,7 @@ PROGS 		= $(patsubst %.c, %, $(SRC))
 OUT_APPS    = $(patsubst %.c, $(OUT_DIR)/%, $(SRC))
 LIBS_DIR	= $(ROOT_DIR)/lib
 LIBS		= -ldl -lpthread  				\
-			  -L$(LIBS_DIR)/ -lpiece
+			  -L$(LIBS_DIR)/ -ltransfer
 
 # 2.TOOL CHAIN
 CC 			= gcc

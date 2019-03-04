@@ -9,8 +9,8 @@
 
 # 1.CONFIG
 DEBUG 		:= YES
-APP			:= libpiece
-APP_OUT		:= libpiece.a
+APP			:= libtransfer
+APP_OUT		:= libtransfer.a
 ROOT_DIR	:= ../..
 PROJ_DIR	:= .
 OUT_DIR		:= $(ROOT_DIR)/lib

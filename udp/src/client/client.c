@@ -1,6 +1,5 @@
 #include "prefixhead.h"
 #include "client.h"
-#include "../udp_piece/udp_piece.h"
 
 int jvt_client_init(jvt_client_t *S, char *ip, int port)
 {
