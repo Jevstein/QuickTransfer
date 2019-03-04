@@ -66,7 +66,7 @@ void jvt_session_uninit(jvt_session_t *S)
 
 void jvt_session_recv_downloadfile_req(jvt_session_t *S, pt_downloadfile_req *req)
 {
-    LOG_INF("recv[%s:%d][downloadfile_req]:: filename='%s'", S->udp_socket_.ip, S->udp_socket_.port, req->filename);
+  LOG_INF("recv[%s:%d][downloadfile_req]:: filename='%s'", S->udp_socket_.ip, S->udp_socket_.port, req->filename);
 
 	pt_downloadfile_ack ack;
 	ack.opcode = downloadfile_ack;
@@ -76,7 +76,7 @@ void jvt_session_recv_downloadfile_req(jvt_session_t *S, pt_downloadfile_req *re
 	strcpy(ack.filename, req->filename);
 	_send_data(S, (void *)&ack, sizeof(ack));
 
-    LOG_INF("send[%s:%d][downloadfile_ack]:: ret=%d, fileid=%d, filesize=%d, filename='%s'"
+  LOG_INF("send[%s:%d][downloadfile_ack]:: ret=%d, fileid=%d, filesize=%d, filename='%s'"
 		, S->udp_socket_.ip, S->udp_socket_.port
 		, ack.ret, ack.fileid, ack.filesize, ack.filename);
 
