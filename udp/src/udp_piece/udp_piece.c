@@ -196,8 +196,8 @@ int udp_piece_merge( udp_piece_t *udp_piece, void *buf, int size )
 					return(-1);
 				}
 			}
-			UDP_DEBUG("merge piece[%d]: buf size=%d, piece_data_len=%d, p_index=%d, recv_pieces=%d, total_size=%d, total_pieces=%d",
-				   p_index, temp_size, data_len, p_index, udp_piece->recv_pieces, udp_piece->total_size, udp_piece->total_pieces );
+			UDP_DEBUG("merge piece[%d]: buf size=%d, piece_data_len=%d, recv_pieces=%d, total_size=%d, total_pieces=%d",
+				   p_index, temp_size, data_len, udp_piece->recv_pieces, udp_piece->total_size, udp_piece->total_pieces );
 			temp_total_size = (piece_buf[HEAD_POS_TOTAL_SIZE] << 8) + (piece_buf[HEAD_POS_TOTAL_SIZE+1]);
 			temp_total_pieces = (piece_buf[HEAD_POS_TOTAL_PIECES] << 8) + (piece_buf[HEAD_POS_TOTAL_PIECES+1]);
 			udp_piece->recv_pieces++;
