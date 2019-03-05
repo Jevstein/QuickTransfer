@@ -69,7 +69,7 @@ int jvt_netio_del_fd(jvt_net_io_t *net_io, int sockfd, int events)
 int jvt_netio_modify_fd(jvt_net_io_t *net_io, int sockfd, int events, void* key)
 {
 	jvt_netio_del_fd(net_io, sockfd, events);
-	return add_fd(net_io, sockfd, events, key);
+	return jvt_netio_add_fd(net_io, sockfd, events, key);
 }
 
 int jvt_netio_wait(jvt_net_io_t *net_io)

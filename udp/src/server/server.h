@@ -7,7 +7,8 @@ typedef struct _jvt_server
 {
     jvt_session_t *sessions_[JVT_MAX_SESSIONS];//应该考虑红黑树
     udp_socket_t udp_socket_;
-    jvt_net_io_t net_io_;
+    // jvt_net_io_t net_io_;
+    jvt_net_reactor_t reactor;
 } jvt_server_t;
 
 
