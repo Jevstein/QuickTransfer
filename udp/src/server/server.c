@@ -91,6 +91,22 @@ int jvt_server_init(jvt_server_t *S, int port)
 		return ret;
 	}
 
+	// 4.反应堆
+	ret = jvt_netio_init(&S->net_io_, 4096, -1);
+	if (ret < 0)
+	{
+		LOG_ERR("failed to init io model! ret=%d", ret);
+		return ret;
+	}
+
+	// 5.add reactor
+	ret = jvt_netio_add_fd(&S->net_io_, S->udp_socket_.info->sockfd, EPOLLIN, S);
+	if (ret < 0)
+	{
+		LOG_ERR("failed to add epoll event[%d]! ret=%d", EPOLLIN, ret);
+		return ret;
+	}
+    
 	// LOG_INF("bind: port=%d", port);
 	return 0;
 }
@@ -101,16 +117,47 @@ void jvt_server_run(jvt_server_t *S)
 
 	LOG_INF("server start success..., listen port: %d", S->udp_socket_.port);
 	
-	//TODO: 建立反应堆
-	while (1) 
+	int idxs = -1;
+	int i;
+
+	//TODO: 正确做法
+	// 1.启动反应堆（反应堆另开线程），反应堆线程循环wait，并将结果以事件的方式保存在队列Q中
+	// 2.循环取出队列Q的事件, 分发处理
+
+	while (1)
 	{
-		udp_socket_recv(&S->udp_socket_);
+		// udp_socket_recv(&S->udp_socket_);
+
+		idxs = jvt_netio_wait(&S->net_io_);
+		if(idxs < 0)
+		{
+			if(errno == EINTR)
+				continue;
+
+			LOG_ERR("failed to watch i/o! err: %s", strerror(errno));
+			break;
+		}
+
+		for(i = 0; i < idxs; ++i)
+		{
+			// udp_socket_t* udp_socket = jvt_netio_get_key(&S->net_io_, i);
+			int events = jvt_netio_get_event(&S->net_io_, i);
+			if(events & EPOLLIN)
+			{
+				udp_socket_recv(&S->udp_socket_);
+			}
+
+			if(events & EPOLLOUT)
+			{
+			}
+		}
 	}
 }
 
 void jvt_server_uninit(jvt_server_t *S)
 {
 	udp_socket_uninit(&S->udp_socket_);
+	jvt_netio_uninit(&S->net_io_);
 
 	int i;
 	for (i = 0; i < (sizeof(S->sessions_) / sizeof(jvt_session_t*)); i++)

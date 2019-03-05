@@ -3,6 +3,11 @@
 #include <stdint.h>
 #include <string.h>
 #include <netinet/in.h>
+#include "udp_piece.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 enum RECV_TYPE
 {
@@ -42,6 +47,14 @@ typedef struct _udp_socket_callback
     recv_data_func_t recv_data_func;
 } udp_socket_callback_t;
 
+typedef struct _udp_socketinfo
+{
+    int sockid;             //标识: ip与port映射成的唯一标识，用于区分不同的客户连接
+    int sockfd;             //socket描述符
+    struct sockaddr_in addr;//地址
+    udp_piece_t *udp_piece; //UDP分片
+} udp_socketinfo_t;
+
 typedef struct _udp_socket
 {
     char ip[64];                    //IP地址
@@ -58,5 +71,9 @@ void udp_socket_uninit(udp_socket_t *udp_socket);
 int udp_socket_bind(udp_socket_t *udp_socket);
 int udp_socket_send(udp_socket_t *udp_socket, const void* buf, int size);
 int udp_socket_recv(udp_socket_t *udp_socket);
+
+#ifdef __cplusplus
+}
+#endif /* end of __cplusplus */
 
 #endif // UDP_SOCKET_H

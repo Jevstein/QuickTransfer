@@ -1,6 +1,5 @@
 ﻿#include "inner.h"
 #include "udp_socket.h"
-#include "udp_piece.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -14,13 +13,13 @@
     s->recv_data_func(s->session, &r);      \
 }
 
-typedef struct _udp_socketinfo
-{
-    int sockid;             //标识: ip与port映射成的唯一标识，用于区分不同的客户连接
-    int sockfd;             //socket描述符
-    struct sockaddr_in addr;//地址
-    udp_piece_t *udp_piece; //UDP分片
-} udp_socketinfo_t;
+// typedef struct _udp_socketinfo
+// {
+//     int sockid;             //标识: ip与port映射成的唯一标识，用于区分不同的客户连接
+//     int sockfd;             //socket描述符
+//     struct sockaddr_in addr;//地址
+//     udp_piece_t *udp_piece; //UDP分片
+// } udp_socketinfo_t;
 
 typedef struct _reset_param
 {
