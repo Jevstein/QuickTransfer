@@ -51,22 +51,22 @@ int _send_file(jvt_session_t *S, jvt_file_t *file, int block)
 	pt_transferfile_noti noti;
 	noti.opcode = transferfile_noti;
 	noti.fileid = file->fileid_;
-	noti.index = block;
+	noti.block = block;
 	noti.size = 0;
 	// noti.size = sizeof(file_data_test);
 	// strcpy(noti.data, file_data_test);
 	char *p = jvt_file_read(file, block, &noti.size);
 	if (p)
 	{
-		noti.size = base64_encode(noti.data, p, noti.size);
-		// memcpy(noti.data, p, noti.size);
+		// noti.size = jvt_base64_encode(noti.data, p, noti.size);
+		memcpy(noti.data, p, noti.size);
 	}
 
 	_send_data(S, (void *)&noti, sizeof(noti));
 
-  LOG_INF("send[%s:%d][transferfile_noti]:: fileid=%d, index=%d, size=%d, data='%p'"
+  	LOG_INF("send[%s:%d][transferfile_noti]:: fileid=%d, block=%d, size=%d, data='%9.9s'"
 		, S->udp_socket_.ip, S->udp_socket_.port
-		, noti.fileid, noti.index, noti.size, noti.data);
+		, noti.fileid, noti.block, noti.size, noti.data);
 }
 
 void jvt_session_on_recv_data(void* user_data, udp_socket_result_t* result)
@@ -136,16 +136,13 @@ void jvt_session_recv_downloadfile_req(jvt_session_t *S, pt_downloadfile_req *re
   LOG_INF("send[%s:%d][downloadfile_ack]:: ret=%d, fileid=%d, filesize=%d, filename='%s'"
 		, S->udp_socket_.ip, S->udp_socket_.port
 		, ack.ret, ack.fileid, ack.filesize, ack.filename);
-
-	// if (ack.ret == 0)
-	// 	_send_file(S, file, 0);
 }
 
 void jvt_session_recv_transferfile_ack(jvt_session_t *S, pt_transferfile_ack *ack)
 {
-  LOG_INF("recv[%s:%d][transferfile_ack]:: ret=%d, fileid=%d, index=%d"
+  LOG_INF("recv[%s:%d][transferfile_ack]:: ret=%d, fileid=%d, block=%d"
 		, S->udp_socket_.ip, S->udp_socket_.port
-		, ack->ret, ack->fileid, ack->index);
+		, ack->ret, ack->fileid, ack->block);
 
 	if (ack->ret == 0)
 	{
@@ -156,13 +153,13 @@ void jvt_session_recv_transferfile_ack(jvt_session_t *S, pt_transferfile_ack *ac
 			return;
 		}
 		
-		if (ack->index * FILE_BLOCK >= file->fileinfo_.filesize)
+		if (ack->block * FILE_BLOCK >= file->fileinfo_.filesize)
 		{
 			// TODO: 清理file
 			LOG_INF("the file[%d] transfer is completed!", ack->fileid);
 			return;
 		}
 
-		_send_file(S, file, ack->index);
+		_send_file(S, file, ack->block);
 	}
 }

@@ -78,7 +78,7 @@ int jvt_file_write(jvt_file_t *file, int block, char *data, int len)
 	if (offset > file->fileinfo_.filesize)
 		return -1;
 
-	memcpy((void *)((char *)file->data_ + block), (void *)data, len);
+	memcpy((void *)((char *)file->data_ + offset), (void *)data, len);
 	file->block_ = block;
 
 	return 0;

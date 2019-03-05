@@ -32,6 +32,7 @@ int jvt_file_init(jvt_file_t *file, char* name, jvt_session_t *session)
 	}
 	
 	file->fileinfo_.filesize = lseek(fd, 0, SEEK_END);
+	lseek(fd, file->fileinfo_.filesize * (-1), SEEK_END);
 	file->data_ = mmap(NULL, file->fileinfo_.filesize, PROT_READ, MAP_SHARED, fd, 0);
 	if (file->data_ == MAP_FAILED)
 	{
@@ -72,5 +73,5 @@ char* jvt_file_read(jvt_file_t *file, int block, int *len)
 	if (*len > FILE_BLOCK)
 		*len = FILE_BLOCK;
 
-	return ((char *)file->data_ + offset);
+	return (char *)((char *)file->data_ + offset);
 }

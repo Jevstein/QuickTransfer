@@ -115,12 +115,12 @@ int _transfer_file_req(jvt_session_t *session, int fileid, int block, int ret)
 	ack.opcode = transferfile_ack;
 	ack.ret = ret;
 	ack.fileid = fileid;
-	ack.index = block;
+	ack.block = block;
 	_send_data(session, (void *)&ack, sizeof(ack));
 
-    LOG_INF("send[%s:%d][transferfile_ack]:: ret=%d, fileid=%d, index=%d"
+    LOG_INF("send[%s:%d][transferfile_ack]:: ret=%d, fileid=%d, block=%d"
 		, session->udp_socket_.ip, session->udp_socket_.port
-		, ack.ret, ack.fileid, ack.index);
+		, ack.ret, ack.fileid, ack.block);
 
 	return 0;
 }
@@ -154,8 +154,9 @@ void jvt_session_run(jvt_session_t *S)
 {
 	//udp_socket_send(&S->udp_socket_, test_str, sizeof(test_str));
 
-	// _download_file_req(S, "git_cmd.jpg");
-	_download_file_req(S, "test.txt");
+	_download_file_req(S, "git_cmd.jpg");
+	// _download_file_req(S, "test100KB.txt");
+	// _download_file_req(S, "test3KB.txt");
 	
 
 	//TODO: 启动反应堆
@@ -189,15 +190,20 @@ void jvt_session_recv_downloadfile_ack(jvt_session_t *S, pt_downloadfile_ack *ac
 
 void jvt_session_recv_transferfile_noti(jvt_session_t *S, pt_transferfile_noti *noti)
 {
-    LOG_INF("send[%s:%d][transferfile_noti]:: fileid=%d, index=%d, size=%d, data='%p'"
+    LOG_INF("send[%s:%d][transferfile_noti]:: fileid=%d, block=%d, size=%d, data='%9.9s'"
 		, S->udp_socket_.ip, S->udp_socket_.port
-		, noti->fileid, noti->index, noti->size, noti->data);
+		, noti->fileid, noti->block, noti->size, noti->data);
+
+	// if (noti->block > 0)
+	// {
+    // 	LOG_INF("stop");
+	// 	return;
+	// }
 
 	int ret = 0;
 	bool completed = false;
-	char data[FILE_PACKET] = {0};
-
-	base64_decode(data, noti->data, noti->size);
+	// char data[FILE_PACKET] = {0};
+	// jvt_base64_decode(data, noti->data, noti->size);
 
 	do
 	{
@@ -209,22 +215,22 @@ void jvt_session_recv_transferfile_noti(jvt_session_t *S, pt_transferfile_noti *
 			break;
 		}
 
-		// if (0 != jvt_file_write(file, noti->index, noti->data, noti->size))
-		if (0 != jvt_file_write(file, noti->index, data, strlen(data)+1))
+		if (0 != jvt_file_write(file, noti->block, noti->data, noti->size))
+		// if (0 != jvt_file_write(file, noti->block, data, strlen(data)+1))
 		{
 			ret = -2;
    			LOG_ERR("failed to write file[%d]!", noti->fileid);
 			break;
 		}
 	
-		if ((noti->index + 1) * FILE_BLOCK >= file->fileinfo_.filesize)
+		if ((noti->block + 1) * FILE_BLOCK >= file->fileinfo_.filesize)
 		{
 			completed = true;
 		}
 
 	} while(0);
 
-	if (0 == _transfer_file_req(S, noti->fileid, noti->index + 1, ret))
+	if (0 == _transfer_file_req(S, noti->fileid, noti->block + 1, ret))
 	{
 		if (completed)
 		{

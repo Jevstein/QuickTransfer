@@ -9,7 +9,7 @@
 #ifndef _PACKET_H_
 #define _PACKET_H_
 
-#define FILE_PACKET (1024 * 5)
+#define FILE_PACKET (1024 * 4)
 #define NET_PACKET(pt) 					\
 	struct pt : public pt_packet_head_t
 
@@ -34,7 +34,7 @@ NET_PACKET(pt_downloadfile_ack)
 NET_PACKET(pt_transferfile_noti)
 {
 	int fileid;
-	int index;
+	int block;
 	int size;
 	char data[FILE_PACKET];
 };
@@ -43,7 +43,7 @@ NET_PACKET(pt_transferfile_ack)
 {
 	char ret;	//返回值: 0=成功，-1=失败
 	int fileid;
-	int index;
+	int block;
 };
 
 #endif//_PACKET_H_
