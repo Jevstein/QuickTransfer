@@ -3,6 +3,7 @@
 
 #include "udp_socket.h"
 #include "udp_piece.h"
+#include "base64.h"
 // #include "file.h"
 
 #endif//_INNER_H_

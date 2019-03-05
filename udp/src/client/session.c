@@ -195,6 +195,10 @@ void jvt_session_recv_transferfile_noti(jvt_session_t *S, pt_transferfile_noti *
 
 	int ret = 0;
 	bool completed = false;
+	char data[FILE_PACKET] = {0};
+
+	base64_decode(data, noti->data, noti->size);
+
 	do
 	{
 		jvt_file_t* file = _find_file_byfileid(S, noti->fileid);
@@ -205,7 +209,8 @@ void jvt_session_recv_transferfile_noti(jvt_session_t *S, pt_transferfile_noti *
 			break;
 		}
 
-		if (0 != jvt_file_write(file, noti->index, noti->data, noti->size))
+		// if (0 != jvt_file_write(file, noti->index, noti->data, noti->size))
+		if (0 != jvt_file_write(file, noti->index, data, strlen(data)+1))
 		{
 			ret = -2;
    			LOG_ERR("failed to write file[%d]!", noti->fileid);

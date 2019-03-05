@@ -57,7 +57,10 @@ int _send_file(jvt_session_t *S, jvt_file_t *file, int block)
 	// strcpy(noti.data, file_data_test);
 	char *p = jvt_file_read(file, block, &noti.size);
 	if (p)
-		memcpy(noti.data, p, noti.size);
+	{
+		noti.size = base64_encode(noti.data, p, noti.size);
+		// memcpy(noti.data, p, noti.size);
+	}
 
 	_send_data(S, (void *)&noti, sizeof(noti));
 

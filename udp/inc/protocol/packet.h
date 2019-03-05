@@ -9,7 +9,7 @@
 #ifndef _PACKET_H_
 #define _PACKET_H_
 
-#define FILE_PACKET (1024 * 4)
+#define FILE_PACKET (1024 * 5)
 #define NET_PACKET(pt) 					\
 	struct pt : public pt_packet_head_t
 
