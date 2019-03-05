@@ -14,6 +14,8 @@ int jvt_file_init(jvt_file_t *file, int fileid, int filesize, jvt_session_t *ses
 {
 	assert(file);
 
+	// gettimeofday(&file->tv_, NULL);
+
 	// strcpy(file->fileinfo_.filename, "../resource/");
 	// strcat(file->fileinfo_.filename, name);
 	file->session_ = session;
@@ -46,6 +48,15 @@ void jvt_file_uninit(jvt_file_t *file)
 {
 	if (!file)
 		return;
+
+	{
+		struct timeval tv;
+		gettimeofday(&tv, NULL);
+		double cost = (tv.tv_sec - file->tv_.tv_sec) + (tv.tv_usec - file->tv_.tv_usec)/1000000.0f;
+
+		LOG_INF("download['%s'] success: cost=%lfms, filesize=%dB, speed=%.4lfB/s"
+		, file->fileinfo_.filename, cost, file->fileinfo_.filesize, file->fileinfo_.filesize / (cost * 1000));
+	}
 
 	munmap(file->data_, file->fileinfo_.filesize);
 

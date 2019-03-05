@@ -21,6 +21,8 @@ typedef struct _jvt_file
 
     void *data_;
     int block_;
+
+    struct timeval tv_;
 } jvt_file_t;
 
 

@@ -9,6 +9,7 @@ jvt_file_t* _new_file(jvt_session_t *S, const char *filename)
 	{
 		if (S->files_[i].fileid_ == 0)
 		{
+			gettimeofday(&S->files_[i].tv_, NULL);
 			strcpy(S->files_[i].fileinfo_.filename, filename);
 			return &S->files_[i];
 		}
@@ -122,7 +123,7 @@ int _transfer_file_req(jvt_session_t *session, int fileid, int block, int ret)
 		, session->udp_socket_.ip, session->udp_socket_.port
 		, ack.ret, ack.fileid, ack.block);
 
-	return 0;
+	return ret;
 }
 
 int jvt_session_init(jvt_session_t *session, char *ip, int port)
@@ -190,24 +191,19 @@ void jvt_session_recv_downloadfile_ack(jvt_session_t *S, pt_downloadfile_ack *ac
 
 void jvt_session_recv_transferfile_noti(jvt_session_t *S, pt_transferfile_noti *noti)
 {
-    LOG_INF("send[%s:%d][transferfile_noti]:: fileid=%d, block=%d, size=%d, data='%9.9s'"
+    LOG_INF("send[%s:%d][transferfile_noti]:: fileid=%d, block=%d, size=%d, data='%2.2s'"
 		, S->udp_socket_.ip, S->udp_socket_.port
 		, noti->fileid, noti->block, noti->size, noti->data);
-
-	// if (noti->block > 0)
-	// {
-    // 	LOG_INF("stop");
-	// 	return;
-	// }
 
 	int ret = 0;
 	bool completed = false;
 	// char data[FILE_PACKET] = {0};
 	// jvt_base64_decode(data, noti->data, noti->size);
 
+	jvt_file_t* file = _find_file_byfileid(S, noti->fileid);
+
 	do
 	{
-		jvt_file_t* file = _find_file_byfileid(S, noti->fileid);
 		if (!file)
 		{
 			ret = -1;
@@ -234,8 +230,7 @@ void jvt_session_recv_transferfile_noti(jvt_session_t *S, pt_transferfile_noti *
 	{
 		if (completed)
 		{
-			// TODO: 清理file
-			LOG_INF("the file[%d] transfer is completed!", noti->fileid);
+			jvt_file_uninit(file);
 		}
 	}
 }

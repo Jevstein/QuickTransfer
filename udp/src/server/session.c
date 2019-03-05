@@ -64,7 +64,7 @@ int _send_file(jvt_session_t *S, jvt_file_t *file, int block)
 
 	_send_data(S, (void *)&noti, sizeof(noti));
 
-  	LOG_INF("send[%s:%d][transferfile_noti]:: fileid=%d, block=%d, size=%d, data='%9.9s'"
+  	LOG_INF("send[%s:%d][transferfile_noti]:: fileid=%d, block=%d, size=%d, data='%2.2s'"
 		, S->udp_socket_.ip, S->udp_socket_.port
 		, noti.fileid, noti.block, noti.size, noti.data);
 }
@@ -155,8 +155,7 @@ void jvt_session_recv_transferfile_ack(jvt_session_t *S, pt_transferfile_ack *ac
 		
 		if (ack->block * FILE_BLOCK >= file->fileinfo_.filesize)
 		{
-			// TODO: 清理file
-			LOG_INF("the file[%d] transfer is completed!", ack->fileid);
+			jvt_file_uninit(file);
 			return;
 		}
 
