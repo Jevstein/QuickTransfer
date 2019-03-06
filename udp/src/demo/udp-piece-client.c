@@ -72,10 +72,10 @@ void echo_client(int sock)
 			uint8_t *buf;
 			int size;
 			buf = udp_piece_get(udp_piece, pieces - i - 1, &size);
-			printf("向服务器发送分片[%d]长度�?d, buf = %p\n", i*2, 5, buf);  
+			printf("向服务器发送分片[%d]长度%d, buf = %p\n", i*2, 5, buf);  
 			//send_len = sendto(sock, buf, size, 0, (struct sockaddr *)&servaddr, sizeof(servaddr)); 
 			sendto(sock, buf, 5, 0, (struct sockaddr *)&servaddr, sizeof(servaddr)); 
-			printf("向服务器发送分片[%d]长度�?d, buf = %p\n", i*2+1, size - 5, buf);
+			printf("向服务器发送分片[%d]长度%d, buf = %p\n", i*2+1, size - 5, buf);
 			sendto(sock, buf + 5, size - 5, 0, (struct sockaddr *)&servaddr, sizeof(servaddr)); 
 			if(send_len != size)
 			{
