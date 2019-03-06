@@ -24,8 +24,8 @@ RAW_SRCS	:= $(wildcard *.c) $(wildcard *.cpp) \
 			   #$(wildcard $(PROJ_DIR)/zlib/*.c)
 
 # 2.TOOL CHAIN
-CXX				:= gcc
-COMMON_FLAGS	:= -g
+CXX				:= g++
+COMMON_FLAGS	:= -g -Wall -DDEBUG -Wno-deprecated
 CXX_FLAGS		:= $(COMMON_FLAGS)
 MKDIR_P     	:= mkdir -p
 CP          	:= cp

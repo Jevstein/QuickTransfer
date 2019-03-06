@@ -27,7 +27,7 @@ int _on_recv(jvt_net_reactor_t *reactor, udp_socket_t* udp_socket)
 int _on_send(jvt_net_reactor_t *reactor, udp_socket_t* udp_socket)
 {
 	//TODO:
-	// 取出send_events事件，并发送
+	// 取出send_events事件，并发�?
 
 	return 0;
 }
@@ -78,7 +78,7 @@ int jvt_net_reactor_watch(jvt_net_reactor_t *reactor)
 
 		for(i = 0; i < idxs; ++i)
 		{
-			udp_socket_t* udp_socket = jvt_netio_get_key(&reactor->net_io, i);
+			udp_socket_t* udp_socket = (udp_socket_t*)jvt_netio_get_key(&reactor->net_io, i);
 			int events = jvt_netio_get_event(&reactor->net_io, i);
 			if(events & EPOLLIN)
 			{
@@ -101,7 +101,7 @@ int jvt_net_reactor_run(jvt_net_reactor_t *reactor)
 	// 此时应该循环从队列（reactor->recv_events）中取出事件，并分发到上层会话session进行处理
 	// ***
 
-	// 临时处理: 阻塞主线程
+	// 临时处理: 阻塞主线�?
 	int ret = pthread_join(reactor->tid, NULL);
 	if (ret != 0)
 	{
