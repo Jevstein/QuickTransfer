@@ -36,16 +36,16 @@ void prepare_server(int argc, const char* argv)
 	// signal(SIGUSR1, reload_sigal);
 }
 
-bool usage(int argc, const char *argv[])
+int usage(int argc, const char *argv[])
 {
-    if (2 != argc)
-        return false;
+    if (argc < 2)
+        return 0;
     
-	if (0 == strcmp("-D", argv[1]))
-	{
-		prepare_server(argc, argv[1]);
-		return true;
-	}
+	// if (0 == strcmp("-D", argv[1]))
+	// {
+	// 	prepare_server(argc, argv[1]);
+	// 	return true;
+	// }
     
     if (0 == strcmp("-v", argv[1]))
     {
@@ -63,10 +63,13 @@ bool usage(int argc, const char *argv[])
     }
     else
     {
-        printf("Usage: %s [-v | -h | -D]\n", EXE_NAME);
+		if (argc < 3) 			return 1;
+		if (atoi(argv[2]) > 0)	return 2;
+
+        printf("Usage: %s [-v | -h | -D | 127.0.0.1 6666]\n", EXE_NAME);
     }
     
-    return true;
+    return -1;
 }
 
 void show_desc()
@@ -132,9 +135,21 @@ int main(int argc, const char * argv[])
 	//setlocale(LC_ALL, "chs");//support Chinese
 	setlocale(LC_ALL, "C");
     
+	char ip[64] = {0};
+	int port = SERVER_PORT;
+	strcpy(ip, SERVER_IP);
+
     // show version information
-    if (usage(argc, argv))
+	int ret = usage(argc, argv);
+    if (ret < 0)
         return 0;
+
+	if (ret == 1) {
+		strcpy(ip, argv[1]);
+	} else if (ret == 2) {
+		strcpy(ip, argv[1]);
+		port = atoi(argv[2]);
+	}
 
 	srand((unsigned)time(NULL));
 
@@ -148,7 +163,7 @@ int main(int argc, const char * argv[])
     
 	// client
 	jvt_client_t C;
-	if (jvt_client_init(&C, SERVER_IP, SERVER_PORT) != 0)
+	if (jvt_client_init(&C, ip, port) != 0)
 	{
 		LOG_ERR("failed to initailize client!");
     	return 0;

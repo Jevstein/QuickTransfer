@@ -20,7 +20,7 @@ void jvt_client_run(jvt_client_t *S)
 {
 	assert(S);
  
-	LOG_INF("client start success..., connect port: %d", S->session_.udp_socket_.port);
+	LOG_INF("client start success..., connect [%s:%d] %d", S->session_.udp_socket_.ip, S->session_.udp_socket_.port);
 
 	do
 	{

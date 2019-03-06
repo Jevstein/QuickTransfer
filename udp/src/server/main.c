@@ -46,37 +46,41 @@ void prepare_server(int argc, const char* argv)
 	// signal(SIGUSR1, reload_sigal);
 }
 
-bool usage(int argc, const char *argv[])
+int usage(int argc, const char *argv[])
 {
     if (2 != argc)
-        return false;
+		return 0;
     
-	if (0 == strcmp("-D", argv[1]))
+	// if (0 == strcmp("-D", argv[1]))
+	// {
+	// 	prepare_server(argc, argv[1]);
+	// 	return 1;
+	// }
+    
+	if (0 == strcmp("-v", argv[1]))
 	{
-		prepare_server(argc, argv[1]);
-		return true;
+		//printf("%s version: %s (%s, %s)\n", EXE_NAME, EXE_VERSION, __DATE__, __TIME__);
+		printf("version: %s (%s, %s)\n", EXE_VERSION, __DATE__, __TIME__);
+	}
+	else if (0 == strcmp("-h", argv[1]))
+	{
+		printf("Usage: %s [options]\n", EXE_NAME);
+		printf("Options: \n");
+		printf(" void\tRun %s\n", EXE_NAME);
+		printf(" -D\tRun %s as daemon\n", EXE_NAME);
+		printf(" -v\tDisplay %s version information\n", EXE_NAME);
+		printf(" -h\tDisplay help information\n");
+	}
+	else
+	{
+		if (atoi(argv[1]) > 0)
+			return 1;
+
+		printf("Usage: %s 6666\n", EXE_NAME);
+		// printf("Usage: %s [-v | -h | -D | 6666]\n", EXE_NAME);
 	}
     
-    if (0 == strcmp("-v", argv[1]))
-    {
-        //printf("%s version: %s (%s, %s)\n", EXE_NAME, EXE_VERSION, __DATE__, __TIME__);
-        printf("version: %s (%s, %s)\n", EXE_VERSION, __DATE__, __TIME__);
-    }
-    else if (0 == strcmp("-h", argv[1]))
-    {
-        printf("Usage: %s [options]\n", EXE_NAME);
-        printf("Options:\n");
-        printf(" void\tRun %s\n", EXE_NAME);
-        printf(" -D\tRun %s as daemon\n", EXE_NAME);
-        printf(" -v\tDisplay %s version information\n", EXE_NAME);
-        printf(" -h\tDisplay help information\n");
-    }
-    else
-    {
-        printf("Usage: %s [-v | -h | -D]\n", EXE_NAME);
-    }
-    
-    return true;
+    return -1;
 }
 
 void show_desc()
@@ -142,9 +146,14 @@ int main(int argc, const char * argv[])
 	//setlocale(LC_ALL, "chs");//support Chinese
 	setlocale(LC_ALL, "C");
     
+	int port = SERVER_PORT;
+
     // show version information
-    if (usage(argc, argv))
-        return 0;
+	int ret = usage(argc, argv);
+    if (ret < 0)
+        return -1;
+	if (ret == 1)
+		port = atoi(argv[1]);
 
 	srand((unsigned)time(NULL));
 
@@ -158,7 +167,7 @@ int main(int argc, const char * argv[])
     
 	// server
 	jvt_server_t S;
-	if (jvt_server_init(&S, SERVER_PORT) != 0)
+	if (jvt_server_init(&S, port) != 0)
 	{
 		LOG_ERR("failed to initailize server!");
     	return 0;
