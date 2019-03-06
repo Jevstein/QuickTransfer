@@ -3,10 +3,13 @@
 #define _SESSION_H_
 #include "file.h"
 
+typedef struct _jvt_server jvt_server_t;
+
 typedef struct _jvt_session
 {
     jvt_file_t files_[JVT_MAX_FILES];//应该考虑红黑树
     udp_socket_t udp_socket_;
+    jvt_server_t *server_;
 } jvt_session_t;
 
 

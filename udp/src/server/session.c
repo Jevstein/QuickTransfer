@@ -1,6 +1,7 @@
 #include "prefixhead.h"
 #include "session.h"
 #include "parser.h"
+#include "server.h"
 
 char file_data_test[] = {"哈哈6c7166407562756e74753a2f6d6e742f686766732f776f726b24206364206c69626576656e742f6578616d706c652fa6c7\n	\
 	166407562756e74753a2f6d6e742f686766732f776f726b2f6c69626576656e742f6578616d706c6524206c73a312d636c69656e7420202020\n	\
@@ -25,10 +26,22 @@ char file_data_test[] = {"哈哈6c7166407562756e74753a2f6d6e742f686766732f776f72
 
 int _send_data(jvt_session_t *S, void *buf, int size)
 {
-	int len;
-	void *data = jvt_parser_encode(S, buf, size, &len);
+	jvt_net_event_t evt;
+	evt.eid = 0;
 
-	return udp_socket_send(&S->udp_socket_, data, len);
+	evt.data = jvt_parser_encode(S, buf, size, &evt.len);
+	if (!evt.data)
+	{
+		LOG_ERR("failed to encode! buf=%p, size=%d", buf, size);
+		return -1;
+	}
+
+	// 加入反应堆队列
+	jvt_net_reactor_push_event(&S->server_->reactor, &S->udp_socket_, &evt);
+	jvt_net_reactor_add_event(&S->server_->reactor, &S->udp_socket_, EPOLLOUT);
+	return 0;
+
+	// return udp_socket_send(&S->udp_socket_, data, len);
 }
 
 jvt_file_t* _find_file(jvt_session_t *S, int fileid)

@@ -48,10 +48,21 @@ jvt_file_t* _find_file_byfileid(jvt_session_t *S, int fileid)
 
 int _send_data(jvt_session_t *S, void *buf, int size)
 {
-	int len;
-	void *data = jvt_parser_encode(S, buf, size, &len);
+	jvt_net_event_t evt;
+	evt.eid = 0;
 
-	return udp_socket_send(&S->udp_socket_, data, len);
+	evt.data = jvt_parser_encode(S, buf, size, &evt.len);
+	if (!evt.data)
+	{
+		LOG_ERR("failed to encode! buf=%p, size=%d", buf, size);
+		return -1;
+	}
+
+	// 加入反应堆队列
+	jvt_net_reactor_push_event(&S->reactor, &S->udp_socket_, &evt);
+	jvt_net_reactor_add_event(&S->reactor, &S->udp_socket_, EPOLLOUT);
+
+	return 0;
 }
 
 udp_socket_t* _on_find_udp_socket(udp_socket_t *udp_socket, char* ip, int port
@@ -143,6 +154,20 @@ int jvt_session_init(jvt_session_t *session, char *ip, int port)
 		return ret;
 	}
 
+	ret = jvt_net_reactor_init(&session->reactor);
+	if (ret < 0)
+	{
+		LOG_ERR("failed to initalize reactor! ret=%d", ret);
+		return ret;
+	}
+
+	ret = jvt_net_reactor_add_event(&session->reactor, &session->udp_socket_, EPOLLIN);
+	if (ret < 0)
+	{
+		LOG_ERR("failed to add reactor event[%d]! ret=%d", EPOLLIN, ret);
+		return ret;
+	}
+
 	return 0;
 }
 
@@ -153,17 +178,17 @@ void jvt_session_uninit(jvt_session_t *S)
 
 void jvt_session_run(jvt_session_t *S)
 {
-	//udp_socket_send(&S->udp_socket_, test_str, sizeof(test_str));
-
 	_download_file_req(S, "git_cmd.jpg");
 	// _download_file_req(S, "test100KB.txt");
 	// _download_file_req(S, "test3KB.txt");
 	
-
-	//TODO: 启动反应堆
-	while (1)
+	// 反应堆处理过程：
+	// 0.启动反应堆
+	// 1.反应堆线程: 循环epoll_wait，并将结果以事件的方式保存在队列Q中
+	// 2.主线程: 循环取出队列Q的事件, 并分发处理
+	if (0 != jvt_net_reactor_run(&S->reactor))
 	{
-		udp_socket_recv(&S->udp_socket_);
+		LOG_ERR("failed to run reactor!");
 	}
 }
 

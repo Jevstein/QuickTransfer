@@ -41,6 +41,7 @@ udp_socket_t* _on_find_udp_socket(udp_socket_t *udp_socket, char* ip, int port
 	// 2.2.新建新的会话
 	S->sessions_[j] = (jvt_session_t *)calloc(1, sizeof(jvt_session_t));
 	assert(S->sessions_[j]);
+	S->sessions_[j]->server_ = S;
 	jvt_session_init(S->sessions_[j]);
 
 	udp_socket_callback_t* cbk = &S->sessions_[j]->udp_socket_.callback;
@@ -117,13 +118,14 @@ void jvt_server_run(jvt_server_t *S)
 
 	LOG_INF("server start success..., listen port: %d", S->udp_socket_.port);
 	
-	//TODO: 正确做法
+	// 反应堆处理过程：
 	// 0.启动反应堆
-	// 1.反应堆线程：循环epoll_wait，并将结果以事件的方式保存在队列Q中
-	// 2.主线程：循环取出队列Q的事件, 分发处理
-
-	// 临时做法
-	jvt_net_reactor_run(&S->reactor);
+	// 1.反应堆线程: 循环epoll_wait，并将结果以事件的方式保存在队列Q中
+	// 2.主线程: 循环取出队列Q的事件, 并分发处理
+	if (0 != jvt_net_reactor_run(&S->reactor))
+	{
+		LOG_ERR("failed to run reactor!");
+	}
 }
 
 void jvt_server_uninit(jvt_server_t *S)
