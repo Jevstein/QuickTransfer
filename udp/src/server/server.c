@@ -116,7 +116,7 @@ void jvt_server_run(jvt_server_t *S)
 {
 	assert(S);
 
-	LOG_INF("server start success..., listen port: %d", S->udp_socket_.port);
+	LOG_INF("server start success! listen port: %d ...", S->udp_socket_.port);
 	
 	// 反应堆处理过程：
 	// 0.启动反应堆

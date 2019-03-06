@@ -1,6 +1,7 @@
 #include "inner.h"
 #include "net_reactor.h"
 
+int jvt_net_reactor_watch(jvt_net_reactor_t *reactor);
 
 void* thread_proc(void* argv)
 {
@@ -81,12 +82,12 @@ int jvt_net_reactor_watch(jvt_net_reactor_t *reactor)
 			int events = jvt_netio_get_event(&reactor->net_io, i);
 			if(events & EPOLLIN)
 			{
-				_on_recv(&reactor, udp_socket);
+				_on_recv(reactor, udp_socket);
 			}
 
 			if(events & EPOLLOUT)
 			{
-				_on_send(&reactor, udp_socket);
+				_on_send(reactor, udp_socket);
 			}
 		}
 	}
