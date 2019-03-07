@@ -108,7 +108,6 @@ int jvt_server_init(jvt_server_t *S, int port)
 		return ret;
 	}
     
-	// LOG_INF("bind: port=%d", port);
 	return 0;
 }
 

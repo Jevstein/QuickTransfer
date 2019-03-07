@@ -36,7 +36,7 @@ NET_PACKET(pt_transferfile_noti)
 	int fileid;
 	int block;
 	int size;
-	char data[FILE_PACKET];
+	char data[FILE_PACKET];//TODO: zero copy - //char *data;
 };
 
 NET_PACKET(pt_transferfile_ack)

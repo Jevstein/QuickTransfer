@@ -72,7 +72,7 @@ int _send_file(jvt_session_t *S, jvt_file_t *file, int block)
 	if (p)
 	{
 		// noti.size = jvt_base64_encode(noti.data, p, noti.size);
-		memcpy(noti.data, p, noti.size);
+		memcpy(noti.data, p, noti.size);// TODO: zero copy
 	}
 
 	_send_data(S, (void *)&noti, sizeof(noti));
